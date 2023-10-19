@@ -2,13 +2,14 @@ console.log('app started');
 
 let expenses;
 
+const token = localStorage.getItem('token');
 
 getExpenses();
 
 function getExpenses()
 {
     //fetching the stored token from local storage
-    let storedExpenses = axios.get("http://localhost:8000/expense/get-expenses");
+    let storedExpenses = axios.get("http://localhost:8000/expense/get-expenses", {headers: {"Authorization": token}});
     
     storedExpenses
     .then((response) => {
@@ -26,7 +27,7 @@ function getExpenses()
 
 // Function to save expenses to Crud Crud server 
 function saveExpenseToServer(expense) {
-    axios.post("http://localhost:8000/expense/add-expense", expense)
+    axios.post("http://localhost:8000/expense/add-expense", expense, {headers: {"Authorization": token}})
     .then((response) => {
         // Display the updated list
         location.reload();
@@ -38,7 +39,7 @@ function saveExpenseToServer(expense) {
 
 
 function editExpenseOnServer(expenseID, expense) {
-    axios.put(`http://localhost:8000/expense/edit-expense/${expenseID}`, expense)
+    axios.put(`http://localhost:8000/expense/edit-expense/${expenseID}`, expense, {headers: {"Authorization": token}})
     .then((response) => {
         // Display the updated list
         location.reload();
@@ -51,7 +52,7 @@ function editExpenseOnServer(expenseID, expense) {
 
 
 function deleteExpenseFromServer(expenseID) {
-    axios.delete(`http://localhost:8000/expense/delete-expense/${expenseID}`)
+    axios.delete(`http://localhost:8000/expense/delete-expense/${expenseID}`, {headers: {"Authorization": token}})
     .then((response) => {
         console.log(response);
         location.reload();
@@ -64,7 +65,6 @@ function deleteExpenseFromServer(expenseID) {
 
 // Function to add an expense to the list
 function addExpense(amount, description, category) {
-    expenses.push({ 'amount': amount, 'description': description, 'category': category });
     const newExpense = { 'amount': amount, 'description': description, 'category': category };
     
     saveExpenseToServer(newExpense);

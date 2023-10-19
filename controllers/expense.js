@@ -8,7 +8,8 @@ exports.addExpense = ((req, res, next) => {
   const category = req.body.category;
   console.log(category);
 
-  Expense.create({
+  //Expense.create({amount: amount, description: description, category: category, userId: req.user.id}) == req.user.createExpense({amount: amount, description: description, category: category})
+  req.user.createExpense({
     amount: amount,
     description: description,
     category: category
@@ -25,7 +26,7 @@ exports.addExpense = ((req, res, next) => {
 
 exports.getExpenses = ((req, res, next) => {
   //req.user.getExpenses() == Expense.findAll({where: {userId: req.user.id}})
-  Expense.findAll()
+  req.user.getExpenses()
   .then(expenses => {
     console.log(expenses);
     return res.status(200).json({expenses: expenses, success: true});
@@ -41,13 +42,15 @@ exports.deleteExpense = ((req, res, next) => {
   const expenseId = req.params.expenseID;
   console.log('expense id to delete expense is: ')
   console.log(expenseId);
-  Expense.destroy({ where: { id: expenseId} })
+  Expense.destroy({ where: { id: expenseId, userId: req.user.id } })
   .then(noOfRecords => {
     console.log(noOfRecords);
     if(noOfRecords !== 0){
-      return res.json('record deleted successfully');
-    }  
+      return res.status(200).json({message:'record deleted successfully', success: true});
+    } 
+    return res.status(200).json({message:'expense doesn\'t belong to user', success: false});
   })
-  .catch(err => console.log(err));
-  
+  .catch(err => {
+    console.log(err);
+  })
 })

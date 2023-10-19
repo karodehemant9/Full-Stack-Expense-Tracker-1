@@ -25,6 +25,9 @@ app.use('/', (req, res) =>{
 });
 
 
+User.hasMany(Expense);
+Expense.belongsTo(User); 
+
 sequelize
 //.sync({force: true})
 .sync()

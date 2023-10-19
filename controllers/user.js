@@ -1,5 +1,6 @@
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 
 
@@ -12,6 +13,15 @@ function isStringInvalid(string) {
     return false;
   }
 }
+
+
+
+const encryptionKey = '563a2395c4fc1a2089074b33d9ca255e309ca3ce73dcb2e8c9ac5c974b501ea8';
+function generateAccessToken(id){
+  return jwt.sign({userID: id}, encryptionKey)
+}
+
+exports.secretKey = encryptionKey;
 
 
 exports.addUser = ((req, res, next) => {
@@ -80,7 +90,7 @@ exports.validateUser = ((req, res, next) => {
           return res.status(500).json({message: 'Something went wrong', success: false});
         }
         if(result === true){
-          return res.status(200).json({message: 'User logged in successfully', success: true});
+          return res.status(200).json({message: 'User logged in successfully', success: true, token: generateAccessToken(users[0].id)});
         }
         //if password is wrong:
         // send a response saying : res.send({message: 'password do not mmatch', success: false});
