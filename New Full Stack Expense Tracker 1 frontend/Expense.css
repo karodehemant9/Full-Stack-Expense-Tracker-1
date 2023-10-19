@@ -1,0 +1,49 @@
+.container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    background-color: #f8f9fa;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    font-weight: bold;
+}
+
+.form-control {
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+/* Style the select dropdown */
+.form-group select {
+    width: 100%;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+/* Add some spacing between elements */
+.form-group {
+    margin-bottom: 15px;
+}
+
+/* Add margin to Delete and Edit buttons */
+.delete-edit-buttons {
+    margin-top: 10px;
+    margin-right: 30px;
+}

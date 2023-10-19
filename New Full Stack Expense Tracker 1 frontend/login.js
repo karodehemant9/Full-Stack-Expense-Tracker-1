@@ -38,9 +38,9 @@ function loginUserOnServer(user)
 {
     axios.post("http://localhost:8000/user/login", user)
     .then(response =>{
-        if(response.success === true){
-            // Assume you receive a successful response from the backend
-            localStorage.setItem('token', response.data.token)
+        console.log(response);
+        if(response.data.success === true){ 
+            console.log('user logged in successfully')
             window.location.href = "ExpenseTracker.html"; 
         }
     })
