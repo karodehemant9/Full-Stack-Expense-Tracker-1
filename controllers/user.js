@@ -58,16 +58,15 @@ exports.addUser = ((req, res, next) => {
 })
 
 
+
 exports.validateUser = ((req, res, next) => {
   const email = req.body.email;
   console.log(email);
   const password = req.body.password;
   console.log(password);
-
   if(isStringInvalid(email) || isStringInvalid(password)){
     return res.status(400).json({message: 'Email or password is missing', success: false});
   }
-
   User.findAll({where: {email: email}})
   .then(users => {
     console.log(users);
@@ -76,7 +75,11 @@ exports.validateUser = ((req, res, next) => {
     // send a 404 response saying : res.status(404).send({message: 'User not found', success: false});
     //if found then check for the password
     if(users.length > 0){
-        if(users[0].password === password){
+      bcrypt.compare(password, users[0].password, (err, result) =>{
+        if(err){
+          return res.status(500).json({message: 'Something went wrong', success: false});
+        }
+        if(result === true){
           return res.status(200).json({message: 'User logged in successfully', success: true});
         }
         //if password is wrong:
@@ -84,6 +87,7 @@ exports.validateUser = ((req, res, next) => {
         else{
           return res.status(400).json({message: 'password do not match', success: false}); 
         }
+      })
     }
     else{
       return res.status(404).json({message: 'User not found', success: false});

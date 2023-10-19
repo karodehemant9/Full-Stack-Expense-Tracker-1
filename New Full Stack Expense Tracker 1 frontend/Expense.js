@@ -1,20 +1,20 @@
 console.log('app started');
 
 let expenses;
-const token = localStorage.getItem('token');
+
 
 getExpenses();
 
 function getExpenses()
 {
     //fetching the stored token from local storage
-    let storedExpenses = axios.get("http://localhost:8000/expense/get-expenses", 
-    {headers: {'Authorization': token}});
+    let storedExpenses = axios.get("http://localhost:8000/expense/get-expenses");
     
     storedExpenses
     .then((response) => {
-        expenses = [...response.data] || [];
         console.log(response);
+        expenses = [...response.data.expenses] || [];
+        
         
         // Display existing expenses on page load
         displayExpenses();  
@@ -26,7 +26,7 @@ function getExpenses()
 
 // Function to save expenses to Crud Crud server 
 function saveExpenseToServer(expense) {
-    axios.post("http://localhost:8000/expense/add-expense", expense, {headers: {'Authorization': token}})
+    axios.post("http://localhost:8000/expense/add-expense", expense)
     .then((response) => {
         // Display the updated list
         location.reload();
@@ -38,7 +38,7 @@ function saveExpenseToServer(expense) {
 
 
 function editExpenseOnServer(expenseID, expense) {
-    axios.put(`http://localhost:8000/expense/edit-expense/${expenseID}`, expense, {headers: {'Authorization': token}})
+    axios.put(`http://localhost:8000/expense/edit-expense/${expenseID}`, expense)
     .then((response) => {
         // Display the updated list
         location.reload();
@@ -51,7 +51,7 @@ function editExpenseOnServer(expenseID, expense) {
 
 
 function deleteExpenseFromServer(expenseID) {
-    axios.delete(`http://localhost:8000/expense/delete-expense/${expenseID}`, {headers: {'Authorization': token}})
+    axios.delete(`http://localhost:8000/expense/delete-expense/${expenseID}`)
     .then((response) => {
         console.log(response);
         location.reload();
