@@ -5,6 +5,11 @@
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
     border-radius: 5px;
     background-color: #f8f9fa;
+
+    justify-content: center;
+    align-items: center;
+
+    
 }
 
 h2 {
@@ -24,10 +29,22 @@ h2 {
 .btn-primary {
     background-color: #007bff;
     border: none;
+   
 }
 
 .btn-primary:hover {
-    background-color: #0056b3;
+    background-color: #b35a00;
+}
+
+
+#buy-premium-button {
+    margin-top: 10px;
+    background-color: #007bff;
+    border: none;
+}
+
+#buy-premium-button:hover {
+    background-color: #b35a00;
 }
 
 /* Style the select dropdown */

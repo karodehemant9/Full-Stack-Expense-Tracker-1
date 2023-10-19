@@ -7,6 +7,9 @@ const userRoutes = require('./routes/user');
 const User = require('./models/user');
 const expenseRoutes = require('./routes/expense');
 const Expense = require('./models/expense');
+const purchaseRoutes = require('./routes/purchase');
+const Order = require('./models/order');
+
 
 const app = express();
 app.use(cors());
@@ -18,6 +21,7 @@ app.use(bodyParser.json());
 
 app.use('/user', userRoutes);
 app.use('/expense', expenseRoutes);
+app.use('/purchase', purchaseRoutes);
 
 
 app.use('/', (req, res) =>{
@@ -28,9 +32,12 @@ app.use('/', (req, res) =>{
 User.hasMany(Expense);
 Expense.belongsTo(User); 
 
+User.hasMany(Order);
+Order.belongsTo(User); 
+
 sequelize
-//.sync({force: true})
-.sync()
+.sync({force: true})
+//.sync()
 .then(result =>{
 })
 .catch(err =>{
