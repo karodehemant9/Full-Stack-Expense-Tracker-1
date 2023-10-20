@@ -211,7 +211,7 @@ function editExpense(index) {
 
 
 
-
+ 
 function updateButtons() {
     var buyPremiumButton = document.getElementById('buy-premium-button');
     var expenseList = document.getElementById("expenseList");
@@ -271,10 +271,20 @@ function displayLeaderboard() {
         const userElement = document.createElement('div');
         userElement.className = 'alert alert-info';
 
-        userElement.innerHTML = `
+        if(user.totalExpense === null){
+            userElement.innerHTML = `
+            <p><strong>Name : </strong> ${user.name}</p>
+            <p><strong>Total Expense : </strong> 0 Rs</p>
+        `;
+        }
+        else{
+            userElement.innerHTML = `
             <p><strong>Name : </strong> ${user.name}</p>
             <p><strong>Total Expense : </strong> ${user.totalExpense} Rs</p>
         `;
+        }
+
+        
 
         expenseList.appendChild(userElement);
     });
