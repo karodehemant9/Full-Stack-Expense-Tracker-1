@@ -89,18 +89,52 @@ exports.getLeaderboardData = (async (req, res, next) => {
     }
     */
 
+
+
+
+
+
+
+
+
     //way 3:
+    // try {
+    //     const leaderboardUsers = await User.findAll({
+
+    //         attributes: ['id', 'name', [sequelize.fn('sum', sequelize.col('amount')), 'totalExpense']],
+    //         include: [
+    //             {
+    //                 model: Expense,
+    //                 attributes: []
+    //             }
+    //         ],
+    //         group: ['id'],
+    //         order: [[sequelize.col('totalExpense'), 'DESC']] //take only necessary fields from table
+    //     });
+
+    //     return res.status(200).json({ leaderboardData: leaderboardUsers, success: true });
+
+    // } catch (error) {
+    //     console.log(error);
+    //     res.status(500).json(error);
+    // }
+
+
+
+
+
+    //way 4:    
+    // const result = await sequelize.query('SELECT sum(e.amount) as totalExpense, u.id, u.name from users as u INNER JOIN expenses as e ON u.id = e.userId GROUP BY e.userId ORDER BY sum(e.amount) DESC');
+    // console.log(result);
+    // return res.json({leaderboardData: result[0], success: true});
+
+
+
+    //way 5:
     try {
         const leaderboardUsers = await User.findAll({
 
-            attributes: ['id', 'name', [sequelize.fn('sum', sequelize.col('amount')), 'totalExpense']],
-            include: [
-                {
-                    model: Expense,
-                    attributes: []
-                }
-            ],
-            group: ['id'],
+            attributes: ['id', 'name', 'totalExpense'],
             order: [[sequelize.col('totalExpense'), 'DESC']] //take only necessary fields from table
         });
 
@@ -110,11 +144,9 @@ exports.getLeaderboardData = (async (req, res, next) => {
         console.log(error);
         res.status(500).json(error);
     }
-
-
-
-    //way 3:    
-    // const result = await sequelize.query('SELECT sum(e.amount) as totalExpense, u.id, u.name from users as u INNER JOIN expenses as e ON u.id = e.userId GROUP BY e.userId ORDER BY sum(e.amount) DESC');
-    // console.log(result);
-    // return res.json({leaderboardData: result[0], success: true});
 })
+
+
+
+
+

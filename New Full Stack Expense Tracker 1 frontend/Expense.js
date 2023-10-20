@@ -4,7 +4,7 @@ let expenses;
 let leaderboardData;
 
 const token = localStorage.getItem('token');
-const isPremiumUser = localStorage.getItem('isPremiumUser');
+let isPremiumUser = localStorage.getItem('isPremiumUser');
 console.log(isPremiumUser);
 
 getExpenses();
@@ -105,6 +105,7 @@ async function handleBuyPremium(e) {
             console.log(response);
 
             localStorage.setItem('isPremiumUser', response.data.isPremiumUser);
+            isPremiumUser = 'true';
 
             alert('you are a premium user now');
             updateButtons();
@@ -211,6 +212,8 @@ function editExpense(index) {
 
 
 
+updateButtons();
+
  
 function updateButtons() {
     var buyPremiumButton = document.getElementById('buy-premium-button');
@@ -223,7 +226,6 @@ function updateButtons() {
         var premiumUserMessage = document.createElement("p");
         premiumUserMessage.innerText = "You are a premium user";
         maindiv.insertBefore(premiumUserMessage, expenseList);
-
         
         var showLeaderboardButton = document.createElement("button");
         showLeaderboardButton.id = "show-leaderboard-button";
@@ -239,6 +241,9 @@ function updateButtons() {
 }
 
 
+
+
+
 async function showLeaderboard() {
     axios.get("http://localhost:8000/premium/show-leaderboard", { headers: { "Authorization": token } })
 
@@ -246,18 +251,11 @@ async function showLeaderboard() {
         .then((response) => {
             console.log(response);
             leaderboardData = [...response.data.leaderboardData] || [];
-
             displayLeaderboard();
         })
         .catch((error) => console.log(error));
     
 }
-
-updateButtons();
-
-
-
-
 
 
 function displayLeaderboard() {
@@ -283,8 +281,6 @@ function displayLeaderboard() {
             <p><strong>Total Expense : </strong> ${user.totalExpense} Rs</p>
         `;
         }
-
-        
 
         expenseList.appendChild(userElement);
     });

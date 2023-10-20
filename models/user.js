@@ -7,6 +7,7 @@ const User  = sequelize.define('user',{
   name: {type: Sequelize.STRING, allowNull: false},
   email: {type: Sequelize.STRING, allowNull: false},
   password: {type: Sequelize.STRING, allowNull: false},
+  totalExpense: {type: Sequelize.FLOAT, defaultValue: 0},
   isPremiumUser: {type: Sequelize.BOOLEAN , defaultValue: false}
 });
 

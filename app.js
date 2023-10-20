@@ -23,7 +23,6 @@ app.use(bodyParser.json());
 app.use('/user', userRoutes);
 app.use('/expense', expenseRoutes);
 app.use('/purchase', purchaseRoutes);
-console.log('h11111');
 app.use('/premium', premiumRoutes);
 
 
