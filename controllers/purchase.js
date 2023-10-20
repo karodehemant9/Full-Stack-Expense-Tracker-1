@@ -4,8 +4,8 @@ const Order = require('../models/order');
 exports.purchasePremium = (async (req, res, next) => {
   try {
     var instance = new Razorpay({
-      key_id: 'rzp_test_7hZLsoCoDQFPcI',
-      key_secret: 'kIzW6a9q57GKMuEYGcmSL3Bs',
+      key_id: 'rzp_test_bKFDRxNzZoiW9T',
+      key_secret: 'DGRU7DCK7TaXNIdTc3Ix4AHI'
     });
     
 
@@ -13,6 +13,7 @@ exports.purchasePremium = (async (req, res, next) => {
       amount: 2500,  // amount in the smallest currency unit
       currency: "INR"
     };
+
     instance.orders.create(options, function(err, order) {
       if(err){
         throw new Error(JSON.stringify(err));

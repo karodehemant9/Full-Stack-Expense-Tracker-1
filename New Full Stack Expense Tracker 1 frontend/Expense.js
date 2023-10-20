@@ -1,8 +1,11 @@
 console.log('app started');
 
 let expenses;
+let leaderboardData;
 
 const token = localStorage.getItem('token');
+const isPremiumUser = localStorage.getItem('isPremiumUser');
+console.log(isPremiumUser);
 
 getExpenses();
 
@@ -80,6 +83,7 @@ const buyPremiumButton = document.getElementById('buy-premium-button');
 buyPremiumButton.addEventListener('click', handleBuyPremium);
 
 
+
 async function handleBuyPremium(e) {
     e.preventDefault();
     let response = await axios.get("http://localhost:8000/purchase/premiummembership", { headers: { "Authorization": token } });
@@ -91,13 +95,20 @@ async function handleBuyPremium(e) {
         "order_id": response.data.order.orderid, //This is a sample Order ID for 1 time payment. Pass the `id` obtained in the response of Step 1
 
         //this handler function is a callback function which will handle the success payments
-        "handler": async function (response) {
-            await axios.post("http://localhost:8000/purchase/updatetransactionstatus", {
+        "handler": async function (razorpayResponse) {
+            const response = await axios.post("http://localhost:8000/purchase/updatetransactionstatus", {
                 order_id: options.order_id,
-                payment_id: response.razorpay_payment_id
-            }, { headers: { "Authorization": token } })
+                payment_id: razorpayResponse.razorpay_payment_id
+            }, { headers: { "Authorization": token } });
+
+            console.log('resoponse ....');
+            console.log(response);
+
+            localStorage.setItem('isPremiumUser', response.data.isPremiumUser);
 
             alert('you are a premium user now');
+            updateButtons();
+            //location.reload();
         }
     };
 
@@ -199,4 +210,73 @@ function editExpense(index) {
 }
 
 
+
+
+function updateButtons() {
+    var buyPremiumButton = document.getElementById('buy-premium-button');
+    var expenseList = document.getElementById("expenseList");
+    var maindiv = document.getElementById('maindiv');
+    console.log(maindiv);
+
+    if (isPremiumUser === 'true') {
+
+        var premiumUserMessage = document.createElement("p");
+        premiumUserMessage.innerText = "You are a premium user";
+        maindiv.insertBefore(premiumUserMessage, expenseList);
+
+        
+        var showLeaderboardButton = document.createElement("button");
+        showLeaderboardButton.id = "show-leaderboard-button";
+        showLeaderboardButton.className = "btn btn-primary";
+        showLeaderboardButton.innerText = "Show Leaderboard";
+        showLeaderboardButton.addEventListener("click", showLeaderboard);
+        maindiv.insertBefore(showLeaderboardButton, expenseList);
+
+        buyPremiumButton.parentNode.removeChild(buyPremiumButton);
+    }
+
+
+}
+
+
+async function showLeaderboard() {
+    axios.get("http://localhost:8000/premium/show-leaderboard", { headers: { "Authorization": token } })
+
+
+        .then((response) => {
+            console.log(response);
+            leaderboardData = [...response.data.leaderboardData] || [];
+
+            displayLeaderboard();
+        })
+        .catch((error) => console.log(error));
+    
+}
+
+updateButtons();
+
+
+
+
+
+
+function displayLeaderboard() {
+    console.log('displaying expenses array : ');
+    console.log(expenses);
+
+    const expenseList = document.getElementById('expenseList');
+    expenseList.innerHTML = '';
+
+    leaderboardData.forEach((user, index) => {
+        const userElement = document.createElement('div');
+        userElement.className = 'alert alert-info';
+
+        userElement.innerHTML = `
+            <p><strong>Name : </strong> ${user.name}</p>
+            <p><strong>Total Expense : </strong> ${user.totalExpense} Rs</p>
+        `;
+
+        expenseList.appendChild(userElement);
+    });
+}
 

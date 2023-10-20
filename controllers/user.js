@@ -90,7 +90,7 @@ exports.validateUser = ((req, res, next) => {
           return res.status(500).json({message: 'Something went wrong', success: false});
         }
         if(result === true){
-          return res.status(200).json({message: 'User logged in successfully', success: true, token: generateAccessToken(users[0].id)});
+          return res.status(200).json({user: users[0], message: 'User logged in successfully', success: true, token: generateAccessToken(users[0].id)});
         }
         //if password is wrong:
         // send a response saying : res.send({message: 'password do not mmatch', success: false});

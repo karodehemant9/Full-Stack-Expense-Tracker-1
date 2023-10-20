@@ -40,9 +40,10 @@ function loginUserOnServer(user)
     .then(response =>{
         console.log(response);
         if(response.data.success === true){
-
             // Assume you receive a successful response from the backend
-            localStorage.setItem('token', response.data.token)
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('isPremiumUser', response.data.user.isPremiumUser);
+            console.log(`user is a premium user ::: ${response.data.user.isPremiumUser}`)
             window.location.href = "ExpenseTracker.html"; 
         }
     })
