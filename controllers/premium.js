@@ -4,6 +4,7 @@ const sequelize = require('../util/database');
 
 
 
+
 exports.getLeaderboardData = (async (req, res, next) => {
 
     //way 1 : brute force
