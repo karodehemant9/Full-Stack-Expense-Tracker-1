@@ -1,6 +1,12 @@
 const newUserButton = document.getElementById('new-user-button');
 newUserButton.addEventListener('click', newUserHandling);
 
+
+const forgetPasswordButton = document.getElementById('forgot-password-button');
+forgetPasswordButton.addEventListener('click', forgetPasswordHandling);
+
+
+
 function newUserHandling(e){
     //redirecting to signup page
     const destinationURL = "signup.html";
@@ -8,6 +14,13 @@ function newUserHandling(e){
     window.location.href = destinationURL;     
 }
 
+
+function forgetPasswordHandling(e){
+    //redirecting to signup page
+    const destinationURL = "ForgetPassword.html";
+    // Redirect to the destination page
+    window.location.href = destinationURL;     
+}
 
 const loginForm = document.getElementById('login-form');
 loginForm.addEventListener('submit', formSubmitHandler);
