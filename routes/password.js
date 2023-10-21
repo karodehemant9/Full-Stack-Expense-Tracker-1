@@ -8,5 +8,4 @@ router.get('/resetpassword/:uuid', recoverPasswordController.resetPassword);
 
 router.post('/updatepassword', recoverPasswordController.updatePassword);
 
-
 module.exports = router;

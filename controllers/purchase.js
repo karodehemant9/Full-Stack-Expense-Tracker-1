@@ -4,8 +4,8 @@ const sequelize = require('../util/database');
 
 
 exports.purchasePremium = (async (req, res, next) => {
+
   try {
-    const t = await sequelize.transaction();
     var instance = new Razorpay({
       key_id: 'rzp_test_bKFDRxNzZoiW9T',
       key_secret: 'DGRU7DCK7TaXNIdTc3Ix4AHI'
@@ -16,28 +16,21 @@ exports.purchasePremium = (async (req, res, next) => {
       amount: 2500,  // amount in the smallest currency unit
       currency: "INR"
     };
-
-    instance.orders.create(options, async function (err, order) {
-      if (err) {
+    instance.orders.create(options, function(err, order) {
+      if(err){
         throw new Error(JSON.stringify(err));
       }
-      try 
-      {
-        const order = await req.user.createOrder({ orderid: order.id, status: 'PENDING' },{transaction: t})
-        await t.commit();
+      req.user.createOrder({orderid: order.id, status: 'PENDING'})
+      .then((order)=>{
         return res.status(201).json({ order, key_id: instance.key_id });
-      } 
-      catch (error) 
-      {
-        await t.rollback();
-        throw new Error(error);
-      }
+      })
+      .catch(()=>{
+        throw new Error(err);
+      })
     });
   }
-  catch (err) 
-  {
-    await t.rollback();
-    return res.status(403).json({ message: 'Somthing went wrong', error: err });
+  catch (err) {
+    return res.status(403).json({ message: 'Somthing went wrong', error: err});  
   }
 })
 

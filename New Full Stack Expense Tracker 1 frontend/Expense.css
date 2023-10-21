@@ -37,13 +37,15 @@ h2 {
 }
 
 
-#buy-premium-button {
+#buy-premium-button,
+#download-expense-button {
     margin-top: 10px;
     background-color: #007bff;
     border: none;
 }
 
-#buy-premium-button:hover {
+#buy-premium-button:hover,
+#download-expense-button:hover {
     background-color: #b35a00;
 }
 
