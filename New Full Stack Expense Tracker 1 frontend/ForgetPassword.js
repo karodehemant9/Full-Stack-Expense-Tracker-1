@@ -37,7 +37,7 @@ function recoverUser(email) {
 
 async function recoverUserOnServer(user) {
     try {
-        const response = await axios.post("http://localhost:8000/password/forgetpassword", user)
+        const response = await axios.post("http://localhost:8000/password/forgetpassword", user);
         console.log(response); 
     } catch (error) {
         console.log(error);
