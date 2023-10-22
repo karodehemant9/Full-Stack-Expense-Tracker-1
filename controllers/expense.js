@@ -32,11 +32,12 @@ exports.addExpense = (async (req, res, next) => {
   }
 })
 
-const ITEMS_PER_PAGE = 2;
+
 
 exports.getExpenses = (async (req, res, next) => {
   const pageNo = req.params.pageNo;
-  const userID = req.user.id
+  const userID = req.user.id;
+  const ITEMS_PER_PAGE = Number(req.params.itemsPerPage);
   
   //req.user.getExpenses() == Expense.findAll({where: {userId: req.user.id}})
   try {

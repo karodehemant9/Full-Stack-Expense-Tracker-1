@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post('/add-expense', authenticateUser, expenseController.addExpense);
 
-router.get('/get-expenses/:pageNo', authenticateUser, expenseController.getExpenses);
+router.get('/get-expenses/:pageNo/:itemsPerPage', authenticateUser, expenseController.getExpenses);
 
 router.delete('/delete-expense/:expenseID', authenticateUser, expenseController.deleteExpense);
 

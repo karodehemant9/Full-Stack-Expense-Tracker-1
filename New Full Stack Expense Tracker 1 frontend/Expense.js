@@ -1,6 +1,9 @@
+
+
 console.log('app started');
 
-let expenses;
+
+let expenses = [];
 let leaderboardData;
 let downloadableExpenseFiles;
 let dailyExpenses;
@@ -14,12 +17,13 @@ console.log(isPremiumUser);
 
 // Define a variable to track the current page
 let currentPage = 1;
-const itemsPerPage = 3; // Number of expenses per page
+
+let itemsPerPage = Number(localStorage.getItem('itemsPerPage')) || 3; // Number of expenses per page
+console.log('items per page are: ');
+console.log(itemsPerPage);
 
 getExpenses();
-getDailyExpenses();
-getWeeklyExpenses();
-getMonthlyExpenses();
+
 
 
 // Function to save expenses to Crud Crud server 
@@ -140,7 +144,6 @@ function updateButtons() {
     var maindiv = document.getElementById('maindiv');
     console.log(maindiv);
 
-
     if (isPremiumUser === 'true') {
 
         var premiumUserMessage = document.createElement("button");
@@ -182,6 +185,43 @@ function updateButtons() {
 
         buyPremiumButton.parentNode.removeChild(buyPremiumButton);
     }
+
+
+
+
+    const container = document.createElement('div');
+    container.id = 'itemsPerPageFieldContainer';
+
+    // Create a text field input element
+    const itemsPerPageField = document.createElement('input');
+    itemsPerPageField.type = 'number'
+    itemsPerPageField.id = 'itemsPerPageField';
+    itemsPerPageField.name = 'Expenses Per Page';
+    // Add a blur event listener to read the value when the user clicks elsewhere
+    itemsPerPageField.addEventListener('blur', function() {
+        const inputValue = itemsPerPageField.value;
+        console.log('Input value changed: ' + inputValue);
+        localStorage.setItem('itemsPerPage', inputValue);
+        itemsPerPage = inputValue;
+        currentPage = 1;
+        getExpenses();
+    
+        // You can use inputValue as needed here
+    });
+
+
+    // Create a button element
+    var itemsPerPageButton = document.createElement("button");
+    itemsPerPageButton.id = "itemsPerPage-button";
+    itemsPerPageButton.className = "btn btn-info";
+    itemsPerPageButton.innerText = "Expenses To Be Displayed Per Page";
+
+    // Append the text field and button to the container in the desired order
+    container.appendChild(itemsPerPageButton);
+    container.appendChild(itemsPerPageField);
+
+    maindiv.insertBefore(container, expenseList);
+
 }
 
 
@@ -204,14 +244,15 @@ var dailyExpensesButton = document.createElement("button");
 dailyExpensesButton.id = "daily-expenses-button";
 dailyExpensesButton.className = "btn btn-primary";
 dailyExpensesButton.innerText = "Daily Expenses";
-dailyExpensesButton.addEventListener("click", displayDailyExpenses);
+dailyExpensesButton.addEventListener("click", getDailyExpenses);
+
 
 
 var weeklyExpensesButton = document.createElement("button");
 weeklyExpensesButton.id = "weekly-expenses-button";
 weeklyExpensesButton.className = "btn btn-primary";
 weeklyExpensesButton.innerText = "Weekly Expenses";
-weeklyExpensesButton.addEventListener("click", displayWeeklyExpenses);
+weeklyExpensesButton.addEventListener("click", getWeeklyExpenses);
 
 
 
@@ -219,7 +260,7 @@ var monthlyExpensesButton = document.createElement("button");
 monthlyExpensesButton.id = "monthly-expenses-button";
 monthlyExpensesButton.className = "btn btn-primary";
 monthlyExpensesButton.innerText = "Monthly Expenses";
-monthlyExpensesButton.addEventListener("click", displayMonthlyExpenses);
+monthlyExpensesButton.addEventListener("click", getMonthlyExpenses);
 
 
 function expenseFilter() {
@@ -285,27 +326,22 @@ function displayLeaderboard() {
 
 
 
-
-
-
-
-
 function getExpenses() {
     //fetching the stored token from local storage
-    let storedExpenses = axios.get(`http://localhost:8000/expense/get-expenses/${currentPage}`, { headers: { "Authorization": token } });
-                                    
+    let storedExpenses = axios.get(`http://localhost:8000/expense/get-expenses/${currentPage}/${itemsPerPage}`, { headers: { "Authorization": token } });
+
     storedExpenses
         .then((response) => {
             console.log(response);
             console.log('logging response@@@@@@@');
-            
+
             console.log(response.data.totalItems);
             console.log('logging total items');
 
 
 
             expenses = [...response.data.expenses] || [];
-            totalPages = Math.ceil(response.data.totalItems / 2);
+            totalPages = Math.ceil(response.data.totalItems / itemsPerPage);
 
 
             // Display existing expenses on page load
@@ -317,8 +353,12 @@ function getExpenses() {
 
 
 function displayExpenses() {
-    // Calculate the total number of pages based on the number of expenses and items per page
-    
+    console.log('displaying expenses array : ');
+    console.log(expenses);
+
+    const expenseList = document.getElementById('expenseList');
+    var maindiv = document.getElementById('maindiv');
+    expenseList.innerHTML = '';
 
     // Get the paginationButtons element
     const paginationButtons = document.getElementById('paginationButtons');
@@ -370,12 +410,6 @@ function displayExpenses() {
 
 
 
-    console.log('displaying expenses array : ');
-    console.log(expenses);
-
-    const expenseList = document.getElementById('expenseList');
-    expenseList.innerHTML = '';
-
     expenses.forEach((expense, index) => {
         const expenseElement = document.createElement('div');
         expenseElement.className = 'alert alert-info';
@@ -402,18 +436,28 @@ function displayExpenses() {
 
 
 
-function nextPageLoad(){
-    console.log(currentPage);
-    console.log(totalPages);
+function nextPageLoad() {
+    console.log('In next page load');
+    console.log('current page no');
     
+    console.log(currentPage);
+    console.log('total pages');
+    console.log(totalPages);
+
     if (currentPage < totalPages) {
         currentPage++;
         getExpenses(); // Refresh the display with the new page
     }
 }
 
-function previousPageLoad(){
+function previousPageLoad() {
+    console.log('In previous page load');
+    console.log('current page no');
     
+    console.log(currentPage);
+    console.log('total pages');
+    console.log(totalPages);
+
     if (currentPage > 1) {
         currentPage--;
         getExpenses(); // Refresh the display with the new page
@@ -423,9 +467,9 @@ function previousPageLoad(){
 
 function getDailyExpenses() {
     //fetching the stored token from local storage
-    let storedExpenses = axios.get(`http://localhost:8000/expense/get-expenses/${currentPage}`, { headers: { "Authorization": token } });
-                                    
-                         
+    let storedExpenses = axios.get(`http://localhost:8000/expense/get-expenses/${currentPage}/${itemsPerPage}`, { headers: { "Authorization": token } });
+
+
     storedExpenses
         .then((response) => {
             console.log(response);
@@ -433,9 +477,12 @@ function getDailyExpenses() {
 
 
             // Display existing expenses on page load
-            displayExpenses();
+            displayDailyExpenses();
         })
         .catch((error) => console.log(error));
+
+        
+       
 }
 
 
@@ -464,12 +511,13 @@ function displayDailyExpenses() {
         deleteButton.textContent = 'Delete Expense';
         deleteButton.addEventListener('click', () => {
             deleteExpenseFromServer(expense.id);
-            getDailyExpenses();
+            //getDailyExpenses();
         });
 
         expenseElement.appendChild(deleteButton);
 
         expenseList.appendChild(expenseElement);
+
     });
 }
 
@@ -479,8 +527,8 @@ function displayDailyExpenses() {
 
 function getWeeklyExpenses() {
     //fetching the stored token from local storage
-    let storedExpenses = axios.get(`http://localhost:8000/expense/get-expenses/${currentPage}`, { headers: { "Authorization": token } });
-                                    
+    let storedExpenses = axios.get(`http://localhost:8000/expense/get-expenses/${currentPage}/${itemsPerPage}`, { headers: { "Authorization": token } });
+
     storedExpenses
         .then((response) => {
             console.log(response);
@@ -488,9 +536,10 @@ function getWeeklyExpenses() {
 
 
             // Display existing expenses on page load
-            displayExpenses();
+            displayWeeklyExpenses();
         })
         .catch((error) => console.log(error));
+
 }
 
 
@@ -517,7 +566,7 @@ function displayWeeklyExpenses() {
         deleteButton.textContent = 'Delete Expense';
         deleteButton.addEventListener('click', () => {
             deleteExpenseFromServer(expense.id);
-            getWeeklyExpenses();
+            //getWeeklyExpenses();
         });
 
         expenseElement.appendChild(deleteButton);
@@ -531,9 +580,9 @@ function displayWeeklyExpenses() {
 
 function getMonthlyExpenses() {
     //fetching the stored token from local storage
-    
-    let storedExpenses = axios.get(`http://localhost:8000/expense/get-expenses/${currentPage}`, { headers: { "Authorization": token } });
-                                    
+
+    let storedExpenses = axios.get(`http://localhost:8000/expense/get-expenses/${currentPage}/${itemsPerPage}`, { headers: { "Authorization": token } });
+
     storedExpenses
         .then((response) => {
             console.log(response);
@@ -541,7 +590,7 @@ function getMonthlyExpenses() {
 
 
             // Display existing expenses on page load
-            displayExpenses();
+            displayMonthlyExpenses();
         })
         .catch((error) => console.log(error));
 }
@@ -569,12 +618,13 @@ function displayMonthlyExpenses() {
         deleteButton.textContent = 'Delete Expense';
         deleteButton.addEventListener('click', () => {
             deleteExpenseFromServer(expense.id);
-            getMonthlyExpenses();
+            //getMonthlyExpenses();
         });
 
         expenseElement.appendChild(deleteButton);
 
         expenseList.appendChild(expenseElement);
+
     });
 }
 
@@ -653,7 +703,7 @@ function displayDownloadableExpenseFiles() {
         const downloadButton = document.createElement('button');
         downloadButton.className = 'btn btn-success download-button';
         downloadButton.textContent = 'Download Expense Details';
-        downloadButton.addEventListener("click", function() {
+        downloadButton.addEventListener("click", function () {
             download(file.fileURL, `Expense/${new Date()}`);
         });
 
@@ -667,28 +717,28 @@ function displayDownloadableExpenseFiles() {
 
 function download(fileURL, filename) {
 
-    axios.get(fileURL, {responseType: 'blob'})     // Set the responseType to 'blob'
+    axios.get(fileURL, { responseType: 'blob' })     // Set the responseType to 'blob'
 
-    .then((response) => {
-        // Create a blob URL from the response
-        const blob = new Blob([response.data]);
-        const blobUrl = window.URL.createObjectURL(blob);
-        
-        // Create an invisible anchor element to trigger the download
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = blobUrl;
-        a.download = filename;  // Specify the filename
-        
-        // Trigger the download and then clean up
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(blobUrl);
-        document.body.removeChild(a);
-    })
-    .catch((err) => {
-        console.log(err);
-    });
+        .then((response) => {
+            // Create a blob URL from the response
+            const blob = new Blob([response.data]);
+            const blobUrl = window.URL.createObjectURL(blob);
+
+            // Create an invisible anchor element to trigger the download
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = blobUrl;
+            a.download = filename;  // Specify the filename
+
+            // Trigger the download and then clean up
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(blobUrl);
+            document.body.removeChild(a);
+        })
+        .catch((err) => {
+            console.log(err);
+        });
 }
 
 
