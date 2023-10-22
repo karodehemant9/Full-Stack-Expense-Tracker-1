@@ -32,13 +32,19 @@ exports.addExpense = (async (req, res, next) => {
   }
 })
 
+const ITEMS_PER_PAGE = 2;
 
 exports.getExpenses = (async (req, res, next) => {
+  const pageNo = req.params.pageNo;
+  const userID = req.user.id
+  
   //req.user.getExpenses() == Expense.findAll({where: {userId: req.user.id}})
   try {
-    const expenses = await req.user.getExpenses()
+    const expenseCount = await Expense.count();
+    let totalItems = expenseCount;
+    const expenses = await Expense.findAll({ where: { userId: userID }, offset: (pageNo-1) * ITEMS_PER_PAGE, limit: ITEMS_PER_PAGE })
     console.log(expenses);
-    return res.status(200).json({ expenses: expenses, success: true });
+    return res.status(200).json({ expenses: expenses, totalItems: totalItems, success: true });
     //res.json({expenses: expenses, success: true});
   }
   catch (err) {

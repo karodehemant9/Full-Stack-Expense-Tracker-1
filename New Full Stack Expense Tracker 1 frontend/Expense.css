@@ -114,9 +114,46 @@ h2 {
 
 
 
-button {
-    transition: background-color 0.2s, color 0.2s;
+#daily-expenses-button,
+#weekly-expenses-button,
+#monthly-expenses-button {
+    margin-top: 10px;
+    background-color: #c9a127;
+    border: none;
 }
+
+
+#daily-expenses-button:hover,
+#weekly-expenses-button:hover,
+#monthly-expenses-button:hover {
+    background-color: #876605;
+}
+
+
+#daily-expenses-button {
+    width: 156px;
+    margin-right: 10px;
+}
+#weekly-expenses-button {
+    width: 150px;
+    margin-right: 10px;
+}
+
+#monthly-expenses-button {
+    width: 165px;
+    
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -152,3 +189,47 @@ button {
     width: 165px;
     
 }
+
+
+
+
+
+
+/* page buttons */
+
+#next-page-button,
+#previous-page-button,
+#current-page-button {
+    margin-top: 10px;
+    background-color: #c9a127;
+    border: none;
+}
+
+
+#next-page-button:hover,
+#previous-page-button:hover,
+#current-page-button:hover {
+    background-color: #876605;
+}
+
+
+#previous-page-button {
+    width: 150px;
+    margin-right: 10px;
+}
+
+
+
+#current-page-button {
+    width: 156px;
+    margin-right: 10px;
+    
+}
+
+
+#next-page-button {
+    width: 165px;
+    
+}
+
+

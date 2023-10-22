@@ -3,29 +3,23 @@ console.log('app started');
 let expenses;
 let leaderboardData;
 let downloadableExpenseFiles;
+let dailyExpenses;
+let weeklyExpenses;
+let monthlyExpenses;
+let totalPages = 0;
 
 const token = localStorage.getItem('token');
 let isPremiumUser = localStorage.getItem('isPremiumUser');
 console.log(isPremiumUser);
 
+// Define a variable to track the current page
+let currentPage = 1;
+const itemsPerPage = 3; // Number of expenses per page
+
 getExpenses();
-
-function getExpenses() {
-    //fetching the stored token from local storage
-    let storedExpenses = axios.get("http://localhost:8000/expense/get-expenses", { headers: { "Authorization": token } });
-                                    
-    storedExpenses
-        .then((response) => {
-            console.log(response);
-            expenses = [...response.data.expenses] || [];
-
-
-            // Display existing expenses on page load
-            displayExpenses();
-        })
-        .catch((error) => console.log(error));
-}
-
+getDailyExpenses();
+getWeeklyExpenses();
+getMonthlyExpenses();
 
 
 // Function to save expenses to Crud Crud server 
@@ -131,38 +125,6 @@ function handleExpenseSubmission(e) {
 
 
 
-function displayExpenses() {
-
-    console.log('displaying expenses array : ');
-    console.log(expenses);
-
-    const expenseList = document.getElementById('expenseList');
-    expenseList.innerHTML = '';
-
-    expenses.forEach((expense, index) => {
-        const expenseElement = document.createElement('div');
-        expenseElement.className = 'alert alert-info';
-
-        expenseElement.innerHTML = `
-            <p><strong>Amount:</strong> ${expense.amount} Rs</p>
-            <p><strong>Description:</strong> ${expense.description}</p>
-            <p><strong>Category:</strong> ${expense.category}</p>
-        `;
-
-        const deleteButton = document.createElement('button');
-        deleteButton.className = 'btn btn-danger delete-edit-buttons';
-        deleteButton.textContent = 'Delete Expense';
-        deleteButton.addEventListener('click', () => {
-            deleteExpenseFromServer(expense.id);
-            getExpenses();
-        });
-
-        expenseElement.appendChild(deleteButton);
-
-        expenseList.appendChild(expenseElement);
-    });
-}
-
 
 updateButtons();
 
@@ -261,6 +223,7 @@ monthlyExpensesButton.addEventListener("click", displayMonthlyExpenses);
 
 
 function expenseFilter() {
+    displayExpenses();
 
     var expenseList = document.getElementById("expenseList");
     var maindiv = document.getElementById('maindiv');
@@ -327,7 +290,85 @@ function displayLeaderboard() {
 
 
 
-function displayDailyExpenses() {
+function getExpenses() {
+    //fetching the stored token from local storage
+    let storedExpenses = axios.get(`http://localhost:8000/expense/get-expenses/${currentPage}`, { headers: { "Authorization": token } });
+                                    
+    storedExpenses
+        .then((response) => {
+            console.log(response);
+            console.log('logging response@@@@@@@');
+            
+            console.log(response.data.totalItems);
+            console.log('logging total items');
+
+
+
+            expenses = [...response.data.expenses] || [];
+            totalPages = Math.ceil(response.data.totalItems / 2);
+
+
+            // Display existing expenses on page load
+            displayExpenses();
+        })
+        .catch((error) => console.log(error));
+}
+
+
+
+function displayExpenses() {
+    // Calculate the total number of pages based on the number of expenses and items per page
+    
+
+    // Get the paginationButtons element
+    const paginationButtons = document.getElementById('paginationButtons');
+    paginationButtons.innerHTML = '';
+
+    // Create buttons for Previous Page, Current Page, and Next Page
+    const prevPageButton = document.createElement('button');
+    prevPageButton.id = 'previous-page-button';
+    prevPageButton.className = "btn btn-primary";
+    prevPageButton.textContent = 'Previous Page';
+    prevPageButton.addEventListener('click', previousPageLoad);
+
+    const currentPageButton = document.createElement('button');
+    currentPageButton.id = 'current-page-button';
+    currentPageButton.className = "btn btn-primary";
+    currentPageButton.textContent = `Page ${currentPage}`;
+
+    const nextPageButton = document.createElement('button');
+    nextPageButton.id = 'next-page-button';
+    nextPageButton.className = "btn btn-primary";
+    nextPageButton.textContent = 'Next Page';
+    nextPageButton.addEventListener('click', nextPageLoad);
+
+
+
+    paginationButtons.appendChild(prevPageButton);
+    paginationButtons.appendChild(currentPageButton);
+    paginationButtons.appendChild(nextPageButton);
+
+
+    if (currentPage === 1) {
+        const prevPageButton = document.getElementById("previous-page-button");
+        //prevPageButton.style.display = "none";  
+        //prevPageButton.style.backgroundColor = 'white';
+        prevPageButton.disabled = true;
+
+    }
+
+    if (currentPage === totalPages) {
+        const nextPageButton = document.getElementById("next-page-button");
+        //nextPageButton.style.display = "none";
+        nextPageButton.disabled = true;
+    }
+
+
+
+
+
+
+
 
     console.log('displaying expenses array : ');
     console.log(expenses);
@@ -336,6 +377,79 @@ function displayDailyExpenses() {
     expenseList.innerHTML = '';
 
     expenses.forEach((expense, index) => {
+        const expenseElement = document.createElement('div');
+        expenseElement.className = 'alert alert-info';
+
+        expenseElement.innerHTML = `
+            <p><strong>Amount:</strong> ${expense.amount} Rs</p>
+            <p><strong>Description:</strong> ${expense.description}</p>
+            <p><strong>Category:</strong> ${expense.category}</p>
+        `;
+
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-danger delete-edit-buttons';
+        deleteButton.textContent = 'Delete Expense';
+        deleteButton.addEventListener('click', () => {
+            deleteExpenseFromServer(expense.id);
+            getExpenses();
+        });
+
+        expenseElement.appendChild(deleteButton);
+
+        expenseList.appendChild(expenseElement);
+    });
+}
+
+
+
+function nextPageLoad(){
+    console.log(currentPage);
+    console.log(totalPages);
+    
+    if (currentPage < totalPages) {
+        currentPage++;
+        getExpenses(); // Refresh the display with the new page
+    }
+}
+
+function previousPageLoad(){
+    
+    if (currentPage > 1) {
+        currentPage--;
+        getExpenses(); // Refresh the display with the new page
+    }
+}
+
+
+function getDailyExpenses() {
+    //fetching the stored token from local storage
+    let storedExpenses = axios.get(`http://localhost:8000/expense/get-expenses/${currentPage}`, { headers: { "Authorization": token } });
+                                    
+                         
+    storedExpenses
+        .then((response) => {
+            console.log(response);
+            dailyExpenses = [...response.data.expenses] || [];
+
+
+            // Display existing expenses on page load
+            displayExpenses();
+        })
+        .catch((error) => console.log(error));
+}
+
+
+
+
+function displayDailyExpenses() {
+
+    console.log('displaying expenses array : ');
+    console.log(expenses);
+
+    const expenseList = document.getElementById('expenseList');
+    expenseList.innerHTML = '';
+
+    dailyExpenses.forEach((expense, index) => {
         const expenseElement = document.createElement('div');
         expenseElement.className = 'alert alert-info';
 
@@ -362,6 +476,24 @@ function displayDailyExpenses() {
 
 
 
+
+function getWeeklyExpenses() {
+    //fetching the stored token from local storage
+    let storedExpenses = axios.get(`http://localhost:8000/expense/get-expenses/${currentPage}`, { headers: { "Authorization": token } });
+                                    
+    storedExpenses
+        .then((response) => {
+            console.log(response);
+            weeklyExpenses = [...response.data.expenses] || [];
+
+
+            // Display existing expenses on page load
+            displayExpenses();
+        })
+        .catch((error) => console.log(error));
+}
+
+
 function displayWeeklyExpenses() {
 
     console.log('displaying expenses array : ');
@@ -370,7 +502,7 @@ function displayWeeklyExpenses() {
     const expenseList = document.getElementById('expenseList');
     expenseList.innerHTML = '';
 
-    expenses.forEach((expense, index) => {
+    weeklyExpenses.forEach((expense, index) => {
         const expenseElement = document.createElement('div');
         expenseElement.className = 'alert alert-info';
 
@@ -395,6 +527,25 @@ function displayWeeklyExpenses() {
 }
 
 
+
+
+function getMonthlyExpenses() {
+    //fetching the stored token from local storage
+    
+    let storedExpenses = axios.get(`http://localhost:8000/expense/get-expenses/${currentPage}`, { headers: { "Authorization": token } });
+                                    
+    storedExpenses
+        .then((response) => {
+            console.log(response);
+            monthlyExpenses = [...response.data.expenses] || [];
+
+
+            // Display existing expenses on page load
+            displayExpenses();
+        })
+        .catch((error) => console.log(error));
+}
+
 function displayMonthlyExpenses() {
 
     console.log('displaying expenses array : ');
@@ -403,7 +554,7 @@ function displayMonthlyExpenses() {
     const expenseList = document.getElementById('expenseList');
     expenseList.innerHTML = '';
 
-    expenses.forEach((expense, index) => {
+    monthlyExpenses.forEach((expense, index) => {
         const expenseElement = document.createElement('div');
         expenseElement.className = 'alert alert-info';
 

@@ -6,14 +6,14 @@ const router = express.Router();
 
 router.post('/add-expense', authenticateUser, expenseController.addExpense);
 
-router.get('/get-expenses', authenticateUser, expenseController.getExpenses);
+router.get('/get-expenses/:pageNo', authenticateUser, expenseController.getExpenses);
 
 router.delete('/delete-expense/:expenseID', authenticateUser, expenseController.deleteExpense);
 
 router.get('/download', authenticateUser, expenseController.downloadExpenses);
 
 router.get('/get-downloadable-expense-files', authenticateUser, expenseController.getDownloadableExpenseFiles);
-http://localhost:8000/expense/
+
 
 
 
