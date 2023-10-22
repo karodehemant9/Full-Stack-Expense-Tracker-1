@@ -2,6 +2,7 @@ console.log('app started');
 
 let expenses;
 let leaderboardData;
+let downloadableExpenseFiles;
 
 const token = localStorage.getItem('token');
 let isPremiumUser = localStorage.getItem('isPremiumUser');
@@ -12,7 +13,7 @@ getExpenses();
 function getExpenses() {
     //fetching the stored token from local storage
     let storedExpenses = axios.get("http://localhost:8000/expense/get-expenses", { headers: { "Authorization": token } });
-
+                                    
     storedExpenses
         .then((response) => {
             console.log(response);
@@ -40,19 +41,6 @@ function saveExpenseToServer(expense) {
 }
 
 
-function editExpenseOnServer(expenseID, expense) {
-    axios.put(`http://localhost:8000/expense/edit-expense/${expenseID}`, expense, { headers: { "Authorization": token } })
-        .then((response) => {
-            // Display the updated list
-            location.reload();
-            getExpenses();
-            console.log(response);
-        })
-        .catch((error) => console.log(error));
-}
-
-
-
 function deleteExpenseFromServer(expenseID) {
     axios.delete(`http://localhost:8000/expense/delete-expense/${expenseID}`, { headers: { "Authorization": token } })
         .then((response) => {
@@ -72,19 +60,13 @@ function addExpense(amount, description, category) {
 }
 
 
+const expenseForm = document.getElementById('add-expense-button');
+expenseForm.addEventListener('click', handleExpenseSubmission);
 
 
-
-
-const expenseForm = document.getElementById('expenseForm');
-expenseForm.addEventListener('submit', handleExpenseSubmission);
 
 const buyPremiumButton = document.getElementById('buy-premium-button');
 buyPremiumButton.addEventListener('click', handleBuyPremium);
-
-const downloadExpenseButton = document.getElementById('download-expense-button');
-downloadExpenseButton.addEventListener('click', download);
-
 
 
 async function handleBuyPremium(e) {
@@ -127,6 +109,8 @@ async function handleBuyPremium(e) {
 }
 
 
+
+
 function handleExpenseSubmission(e) {
     e.preventDefault();
     const amount = parseFloat(document.getElementById('expenseAmount').value);
@@ -144,28 +128,11 @@ function handleExpenseSubmission(e) {
 
 
 
-function download(){
-    axios.get('http://localhost:8000/user/download', { headers: {"Authorization" : token} })
-    .then((response) => {
-        if(response.status === 201){
-            //the backend is essentially sending a download link
-            //which if we open in browser, the file would download
-            var a = document.createElement("a");
-            a.href = response.data.fileUrl;
-            a.download = 'myexpense.csv';
-            a.click();
-        } else {
-            throw new Error(response.data.message)
-        }
 
-    })
-    .catch((err) => {
-        showError(err)
-    });
-}
 
 
 function displayExpenses() {
+
     console.log('displaying expenses array : ');
     console.log(expenses);
 
@@ -190,78 +157,122 @@ function displayExpenses() {
             getExpenses();
         });
 
-        const editButton = document.createElement('button');
-        editButton.className = 'btn btn-warning delete-edit-buttons';
-        editButton.textContent = 'Edit Expense';
-        editButton.addEventListener('click', () => {
-            editExpense(index);
-        });
-
         expenseElement.appendChild(deleteButton);
-        expenseElement.appendChild(editButton);
 
         expenseList.appendChild(expenseElement);
     });
 }
 
 
-function editExpense(index) {
-    const editedExpense = expenses[index];
-    const expenseForm = document.getElementById('expenseForm');
-
-    document.getElementById('expenseAmount').value = editedExpense.amount;
-    document.getElementById('expenseDescription').value = editedExpense.description;
-    document.getElementById('expenseCategory').value = editedExpense.category;
-
-
-    expenseForm.removeEventListener('submit', handleExpenseSubmission);
-
-    expenseForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const amount = parseFloat(document.getElementById('expenseAmount').value);
-        const description = document.getElementById('expenseDescription').value;
-        const category = document.getElementById('expenseCategory').value;
-
-        if (!isNaN(amount) && description && category) {
-            const updatedExpense = { 'amount': amount, 'description': description, 'category': category };
-            editExpenseOnServer(editedExpense.id, updatedExpense);
-            expenseForm.reset();
-        }
-        else {
-            alert('Please fill in all fields with valid data.');
-        }
-    });
-}
-
-
-
 updateButtons();
 
- 
+
+
+var dailyExpensesButton = document.getElementById("daily-expenses-button");
+var weeklyExpensesButton = document.getElementById("weekly-expenses-button");
+var monthlyExpensesButton = document.getElementById("monthly-expenses-button");
+
 function updateButtons() {
     var buyPremiumButton = document.getElementById('buy-premium-button');
     var expenseList = document.getElementById("expenseList");
     var maindiv = document.getElementById('maindiv');
     console.log(maindiv);
 
+
     if (isPremiumUser === 'true') {
 
-        var premiumUserMessage = document.createElement("p");
-        premiumUserMessage.innerText = "You are a premium user";
+        var premiumUserMessage = document.createElement("button");
+        premiumUserMessage.id = "premium-user";
+        premiumUserMessage.className = "btn btn-primary";
+        premiumUserMessage.innerText = "You are a Premium User";
         maindiv.insertBefore(premiumUserMessage, expenseList);
-        
+
+
         var showLeaderboardButton = document.createElement("button");
         showLeaderboardButton.id = "show-leaderboard-button";
         showLeaderboardButton.className = "btn btn-primary";
         showLeaderboardButton.innerText = "Show Leaderboard";
         showLeaderboardButton.addEventListener("click", showLeaderboard);
+        showLeaderboardButton.addEventListener("click", function () {
+            removeExpensesButtons();
+        });
         maindiv.insertBefore(showLeaderboardButton, expenseList);
+
+
+        var showExpensesButton = document.createElement("button");
+        showExpensesButton.id = "show-expenses-button";
+        showExpensesButton.className = "btn btn-primary";
+        showExpensesButton.innerText = "Show Expenses";
+        showExpensesButton.addEventListener("click", expenseFilter);
+        maindiv.insertBefore(showExpensesButton, expenseList);
+
+
+        var downloadExpensesButton = document.createElement("button");
+        downloadExpensesButton.id = "download-expense-button";
+        downloadExpensesButton.className = "btn btn-primary";
+        downloadExpensesButton.innerText = "Download Expenses";
+        downloadExpensesButton.addEventListener("click", downloadFile);
+        downloadExpensesButton.addEventListener("click", function () {
+            removeExpensesButtons();
+        });
+        maindiv.insertBefore(downloadExpensesButton, expenseList);
+
 
         buyPremiumButton.parentNode.removeChild(buyPremiumButton);
     }
+}
 
+
+
+function removeExpensesButtons() {
+    if (dailyExpensesButton && dailyExpensesButton.parentNode) {
+        dailyExpensesButton.parentNode.removeChild(dailyExpensesButton);
+    }
+
+    if (weeklyExpensesButton && weeklyExpensesButton.parentNode) {
+        weeklyExpensesButton.parentNode.removeChild(weeklyExpensesButton);
+    }
+
+    if (monthlyExpensesButton && monthlyExpensesButton.parentNode) {
+        monthlyExpensesButton.parentNode.removeChild(monthlyExpensesButton);
+    }
+}
+
+var dailyExpensesButton = document.createElement("button");
+dailyExpensesButton.id = "daily-expenses-button";
+dailyExpensesButton.className = "btn btn-primary";
+dailyExpensesButton.innerText = "Daily Expenses";
+dailyExpensesButton.addEventListener("click", displayDailyExpenses);
+
+
+var weeklyExpensesButton = document.createElement("button");
+weeklyExpensesButton.id = "weekly-expenses-button";
+weeklyExpensesButton.className = "btn btn-primary";
+weeklyExpensesButton.innerText = "Weekly Expenses";
+weeklyExpensesButton.addEventListener("click", displayWeeklyExpenses);
+
+
+
+var monthlyExpensesButton = document.createElement("button");
+monthlyExpensesButton.id = "monthly-expenses-button";
+monthlyExpensesButton.className = "btn btn-primary";
+monthlyExpensesButton.innerText = "Monthly Expenses";
+monthlyExpensesButton.addEventListener("click", displayMonthlyExpenses);
+
+
+function expenseFilter() {
+
+    var expenseList = document.getElementById("expenseList");
+    var maindiv = document.getElementById('maindiv');
+    //Daily weekly and monthly buttons
+
+    maindiv.insertBefore(dailyExpensesButton, expenseList);
+    maindiv.insertBefore(weeklyExpensesButton, expenseList);
+    maindiv.insertBefore(monthlyExpensesButton, expenseList);
 
 }
+
+
 
 
 
@@ -277,7 +288,7 @@ async function showLeaderboard() {
             displayLeaderboard();
         })
         .catch((error) => console.log(error));
-    
+
 }
 
 
@@ -292,13 +303,13 @@ function displayLeaderboard() {
         const userElement = document.createElement('div');
         userElement.className = 'alert alert-info';
 
-        if(user.totalExpense === null){
+        if (user.totalExpense === null) {
             userElement.innerHTML = `
             <p><strong>Name : </strong> ${user.name}</p>
             <p><strong>Total Expense : </strong> 0 Rs</p>
         `;
         }
-        else{
+        else {
             userElement.innerHTML = `
             <p><strong>Name : </strong> ${user.name}</p>
             <p><strong>Total Expense : </strong> ${user.totalExpense} Rs</p>
@@ -308,4 +319,225 @@ function displayLeaderboard() {
         expenseList.appendChild(userElement);
     });
 }
+
+
+
+
+
+
+
+
+function displayDailyExpenses() {
+
+    console.log('displaying expenses array : ');
+    console.log(expenses);
+
+    const expenseList = document.getElementById('expenseList');
+    expenseList.innerHTML = '';
+
+    expenses.forEach((expense, index) => {
+        const expenseElement = document.createElement('div');
+        expenseElement.className = 'alert alert-info';
+
+        expenseElement.innerHTML = `
+            <p><strong>Amount:</strong> ${expense.amount} Rs</p>
+            <p><strong>Description:</strong> ${expense.description}</p>
+            <p><strong>Category:</strong> ${expense.category}</p>
+        `;
+
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-danger delete-edit-buttons';
+        deleteButton.textContent = 'Delete Expense';
+        deleteButton.addEventListener('click', () => {
+            deleteExpenseFromServer(expense.id);
+            getDailyExpenses();
+        });
+
+        expenseElement.appendChild(deleteButton);
+
+        expenseList.appendChild(expenseElement);
+    });
+}
+
+
+
+
+function displayWeeklyExpenses() {
+
+    console.log('displaying expenses array : ');
+    console.log(expenses);
+
+    const expenseList = document.getElementById('expenseList');
+    expenseList.innerHTML = '';
+
+    expenses.forEach((expense, index) => {
+        const expenseElement = document.createElement('div');
+        expenseElement.className = 'alert alert-info';
+
+        expenseElement.innerHTML = `
+            <p><strong>Amount:</strong> ${expense.amount} Rs</p>
+            <p><strong>Description:</strong> ${expense.description}</p>
+            <p><strong>Category:</strong> ${expense.category}</p>
+        `;
+
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-danger delete-edit-buttons';
+        deleteButton.textContent = 'Delete Expense';
+        deleteButton.addEventListener('click', () => {
+            deleteExpenseFromServer(expense.id);
+            getWeeklyExpenses();
+        });
+
+        expenseElement.appendChild(deleteButton);
+
+        expenseList.appendChild(expenseElement);
+    });
+}
+
+
+function displayMonthlyExpenses() {
+
+    console.log('displaying expenses array : ');
+    console.log(expenses);
+
+    const expenseList = document.getElementById('expenseList');
+    expenseList.innerHTML = '';
+
+    expenses.forEach((expense, index) => {
+        const expenseElement = document.createElement('div');
+        expenseElement.className = 'alert alert-info';
+
+        expenseElement.innerHTML = `
+            <p><strong>Amount:</strong> ${expense.amount} Rs</p>
+            <p><strong>Description:</strong> ${expense.description}</p>
+            <p><strong>Category:</strong> ${expense.category}</p>
+        `;
+
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-danger delete-edit-buttons';
+        deleteButton.textContent = 'Delete Expense';
+        deleteButton.addEventListener('click', () => {
+            deleteExpenseFromServer(expense.id);
+            getMonthlyExpenses();
+        });
+
+        expenseElement.appendChild(deleteButton);
+
+        expenseList.appendChild(expenseElement);
+    });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//Download Expenses:
+
+
+function downloadFile() {
+    console.log('%%%%%%%%%%%%%%%');
+    axios.get(`http://localhost:8000/user/download`, { headers: { "Authorization": token } })
+        .then((response) => {
+            console.log(response);
+            if (response.status === 200) {
+                getDownloadableExpenseFiles();
+            } else {
+                throw new Error(response.data.message)
+            }
+
+        })
+        .catch((err) => {
+            console.log(err);
+        });
+}
+
+
+
+function getDownloadableExpenseFiles() {
+    //fetching the stored token from local storage
+    console.log('printing token in getDownloadableExpenseFiles function');
+    console.log(token);
+    let storedExpenseFiles = axios.get("http://localhost:8000/expense/get-downloadable-expense-files", { headers: { "Authorization": token } });
+
+    console.log(storedExpenseFiles);
+    storedExpenseFiles
+        .then((response) => {
+            console.log(storedExpenseFiles);
+            console.log('$$$$printing getDownloadableExpenseFiles function response')
+            console.log(response);
+            console.log('$$$$printing getDownloadableExpenseFiles function response')
+            downloadableExpenseFiles = [...response.data.files] || [];
+            displayDownloadableExpenseFiles();
+
+        })
+        .catch((error) => console.log(error));
+}
+
+
+function displayDownloadableExpenseFiles() {
+    console.log('displaying dowanloadable files array : ');
+    console.log(downloadableExpenseFiles);
+
+    const expenseList = document.getElementById('expenseList');
+    expenseList.innerHTML = '';
+
+    downloadableExpenseFiles.forEach((file, index) => {
+        const fileElement = document.createElement('div');
+        fileElement.className = 'alert alert-info';
+
+        fileElement.innerHTML = `
+            <p><strong>ID:</strong> ${file.id}</p>
+            <p><strong>Date:</strong> ${file.createdAt}</p>
+        `;
+
+        const downloadButton = document.createElement('button');
+        downloadButton.className = 'btn btn-success download-button';
+        downloadButton.textContent = 'Download Expense Details';
+        downloadButton.addEventListener("click", function() {
+            download(file.fileURL, `Expense/${new Date()}`);
+        });
+
+        fileElement.appendChild(downloadButton);
+
+        expenseList.appendChild(fileElement);
+    });
+}
+
+
+
+function download(fileURL, filename) {
+
+    axios.get(fileURL, {responseType: 'blob'})     // Set the responseType to 'blob'
+
+    .then((response) => {
+        // Create a blob URL from the response
+        const blob = new Blob([response.data]);
+        const blobUrl = window.URL.createObjectURL(blob);
+        
+        // Create an invisible anchor element to trigger the download
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = blobUrl;
+        a.download = filename;  // Specify the filename
+        
+        // Trigger the download and then clean up
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(blobUrl);
+        document.body.removeChild(a);
+    })
+    .catch((err) => {
+        console.log(err);
+    });
+}
+
 

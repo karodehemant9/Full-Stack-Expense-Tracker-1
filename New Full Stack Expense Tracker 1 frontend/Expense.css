@@ -1,5 +1,5 @@
 .container {
-    max-width: 400px;
+    max-width: 535px;
     margin: 0 auto;
     padding: 20px;
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
@@ -37,17 +37,20 @@ h2 {
 }
 
 
-#buy-premium-button,
-#download-expense-button {
+
+#add-expense-button,
+#buy-premium-button {
     margin-top: 10px;
     background-color: #007bff;
     border: none;
+    width: 100%;
 }
 
-#buy-premium-button:hover,
-#download-expense-button:hover {
+#add-expense-button:hover,
+#buy-premium-button:hover {
     background-color: #b35a00;
 }
+
 
 /* Style the select dropdown */
 .form-group select {
@@ -65,4 +68,87 @@ h2 {
 .delete-edit-buttons {
     margin-top: 10px;
     margin-right: 30px;
+}
+
+#premium-user {
+    margin-top: 10px;
+    background-color: #b35a00;
+    border: none;
+    width: 100%;
+}
+
+
+
+
+
+
+#download-expense-button,
+#show-expenses-button,
+#show-leaderboard-button {
+    margin-top: 10px;
+    background-color: #007bff;
+    border: none;
+}
+
+#download-expense-button:hover,
+#show-expenses-button:hover,
+#show-leaderboard-button:hover {
+    background-color: #b35a00;
+}
+
+
+#show-leaderboard-button {
+    width: 157px;
+    margin-right: 10px;
+}
+
+#show-expenses-button {
+    width: 150px;
+    margin-right: 10px;
+}
+
+#download-expense-button {
+    width: 165px;
+}
+
+
+
+
+button {
+    transition: background-color 0.2s, color 0.2s;
+}
+
+
+
+
+
+
+#daily-expenses-button,
+#weekly-expenses-button,
+#monthly-expenses-button {
+    margin-top: 10px;
+    background-color: #c9a127;
+    border: none;
+}
+
+
+#daily-expenses-button:hover,
+#weekly-expenses-button:hover,
+#monthly-expenses-button:hover {
+    background-color: #876605;
+}
+
+
+#daily-expenses-button {
+    width: 156px;
+    margin-right: 10px;
+}
+#weekly-expenses-button {
+    width: 150px;
+    margin-right: 10px;
+}
+
+#monthly-expenses-button {
+    width: 165px;
+    
 }

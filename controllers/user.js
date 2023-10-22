@@ -1,6 +1,9 @@
+const { UploadImageModel } = require('sib-api-v3-sdk');
+const Expense = require('../models/expense');
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+
 
 
 
@@ -115,6 +118,3 @@ exports.validateUser = (async (req, res, next) => {
 
 
 
-exports.downloadExpenses = (async (req, res, next) => {
-
-})

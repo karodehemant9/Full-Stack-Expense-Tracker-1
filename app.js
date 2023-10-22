@@ -16,6 +16,7 @@ const premiumRoutes = require('./routes/premium');
 const passwordRoutes = require('./routes/password');
 
 const ForgetPasswordRequest = require('./models/forgetPasswordRequest');
+const DownloadedFile = require('./models/downloadedFile');
 
 
 
@@ -38,8 +39,10 @@ app.use('/password', passwordRoutes);
 
 
 
+
+
 app.use('/', (req, res) =>{
-    res.send('Home page');
+    res.send('Hello Home page');
 });
 
 
@@ -50,7 +53,11 @@ User.hasMany(Order);
 Order.belongsTo(User); 
 
 User.hasMany(ForgetPasswordRequest);
-ForgetPasswordRequest.belongsTo(User); 
+ForgetPasswordRequest.belongsTo(User);
+
+
+User.hasMany(DownloadedFile);
+DownloadedFile.belongsTo(User);
 
 sequelize
 //.sync({force: true})
