@@ -3,6 +3,8 @@ const Expense = require('../models/expense');
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const sequelize = require('../util/database');
+const errorHandlingMiddleware = require('../middleware/errorHandling');
 
 
 
@@ -36,6 +38,8 @@ exports.addUser = (async (req, res, next) => {
   console.log(password);
 
   if (isStringInvalid(name) || isStringInvalid(email) || isStringInvalid(password)) {
+    const customError = new Error('Bad Parameters. Something is missing'); // Create a custom error with a message
+    next(customError);
     return res.status(400).json({ err: 'Bad Parameters. Something is missing' });
   }
 
@@ -47,29 +51,33 @@ exports.addUser = (async (req, res, next) => {
     //if user with this email is found:
     // send a 200 response saying : res.status(200).send({message: 'User already exist', success: false});
     if (users.length > 0) {
-      res.status(200).json({ message: 'Email already exist', success: false });
+      const customError = new Error('Email already exist'); // Create a custom error with a message
+      next(customError);
+      return res.status(200).json({ message: 'Email already exist', success: false });
     }
     else {
       bcrypt.hash(password, 10, async (err, hash) => {
+        const t = await sequelize.transaction();
         try {
           const user = await User.create({
             name: name,
             email: email,
             password: hash
-          })
+          }, {transaction: t})
+          await t.commit();
           console.log('User created');
-          res.status(201).json({ message: 'User created successfully', success: true });
+          return res.status(201).json({ message: 'User created successfully', success: true });
         }
         catch (err) {
-          res.status(500).json({ message: err });
+          await t.rollback();
+          return res.status(500).json({ message: err });
         };
       })
     }
   } catch (error) {
-    res.status(500).json({ message: error });
+    return res.status(500).json({ message: error });
   }
 })
-
 
 
 exports.validateUser = (async (req, res, next) => {
@@ -79,6 +87,8 @@ exports.validateUser = (async (req, res, next) => {
   console.log(password);
   
   if (isStringInvalid(email) || isStringInvalid(password)) {
+    const customError = new Error('Email or password is missing'); // Create a custom error with a message
+    next(customError);
     return res.status(400).json({ message: 'Email or password is missing', success: false });
   }
 
@@ -94,6 +104,7 @@ exports.validateUser = (async (req, res, next) => {
     if (users.length > 0) {
       bcrypt.compare(password, users[0].password, (err, result) => {
         if (err) {
+          next(err);
           return res.status(500).json({ message: 'Something went wrong', success: false });
         }
         if (result === true) {
@@ -102,14 +113,21 @@ exports.validateUser = (async (req, res, next) => {
         //if password is wrong:
         // send a response saying : res.send({message: 'password do not mmatch', success: false});
         else {
+          const customError = new Error('password do not match'); // Create a custom error with a message
+          next(customError);
           return res.status(400).json({ message: 'password do not match', success: false });
         }
       })
     }
     else {
+      const customError = new Error('User not found'); // Create a custom error with a message
+      next(customError);
       return res.status(404).json({ message: 'User not found', success: false });
+      
     }
   } catch (error) {
+
+    next(error);
     return res.status(500).json({ message: error, success: false });
   }
 

@@ -38,6 +38,9 @@ function recoverUser(email) {
 async function recoverUserOnServer(user) {
     try {
         const response = await axios.post("http://localhost:8000/password/forgetpassword", user);
+        if(response.data.success === false){
+            alert('Incorrect Email ID');
+        }
         console.log(response); 
     } catch (error) {
         console.log(error);

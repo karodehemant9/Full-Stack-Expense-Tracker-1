@@ -1,22 +1,23 @@
-
-
 console.log('app started');
 
 
 let expenses = [];
 let leaderboardData;
 let downloadableExpenseFiles;
-let dailyExpenses;
-let weeklyExpenses;
-let monthlyExpenses;
-let totalPages = 0;
+let dailyExpenses = [];
+let weeklyExpenses = [];
+let monthlyExpenses = [];
+let totalPages;
+let totalExpenseSum;
+
+
+// Define a variable to track the current page
+let currentPage = 1;
 
 const token = localStorage.getItem('token');
 let isPremiumUser = localStorage.getItem('isPremiumUser');
 console.log(isPremiumUser);
 
-// Define a variable to track the current page
-let currentPage = 1;
 
 let itemsPerPage = Number(localStorage.getItem('itemsPerPage')) || 3; // Number of expenses per page
 console.log('items per page are: ');
@@ -25,6 +26,13 @@ console.log(itemsPerPage);
 getExpenses();
 
 
+
+
+// Function to add an expense to the list
+function addExpense(amount, description, category) {
+    const newExpense = { 'amount': amount, 'description': description, 'category': category };
+    saveExpenseToServer(newExpense);
+}
 
 // Function to save expenses to Crud Crud server 
 function saveExpenseToServer(expense) {
@@ -51,17 +59,60 @@ function deleteExpenseFromServer(expenseID) {
 }
 
 
-// Function to add an expense to the list
-function addExpense(amount, description, category) {
-    const newExpense = { 'amount': amount, 'description': description, 'category': category };
-    saveExpenseToServer(newExpense);
-}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//Handle Add Expense
 
 const expenseForm = document.getElementById('add-expense-button');
 expenseForm.addEventListener('click', handleExpenseSubmission);
 
 
+
+function handleExpenseSubmission(e) {
+    e.preventDefault();
+    const amount = parseFloat(document.getElementById('expenseAmount').value);
+    const description = document.getElementById('expenseDescription').value;
+    const category = document.getElementById('expenseCategory').value;
+
+    if (!isNaN(amount) && description && category) {
+        addExpense(amount, description, category);
+        e.target.reset();
+    } else {
+        alert('Please fill in all fields with valid data.');
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//Buy Premium Razorpay API Integration
 
 const buyPremiumButton = document.getElementById('buy-premium-button');
 buyPremiumButton.addEventListener('click', handleBuyPremium);
@@ -75,7 +126,7 @@ async function handleBuyPremium(e) {
 
     var options = {
         "key": response.data.key_id, // Enter the Key ID generated from the Dashboard
-        "order_id": response.data.order.orderid, //This is a sample Order ID for 1 time payment. Pass the `id` obtained in the response of Step 1
+        "order_id": response.data.order.id, //This is a sample Order ID for 1 time payment. Pass the `id` obtained in the response of Step 1
 
         //this handler function is a callback function which will handle the success payments
         "handler": async function (razorpayResponse) {
@@ -109,20 +160,14 @@ async function handleBuyPremium(e) {
 
 
 
-function handleExpenseSubmission(e) {
-    e.preventDefault();
-    const amount = parseFloat(document.getElementById('expenseAmount').value);
-    const description = document.getElementById('expenseDescription').value;
-    const category = document.getElementById('expenseCategory').value;
 
-    if (!isNaN(amount) && description && category) {
-        addExpense(amount, description, category);
-        displayExpenses();
-        e.target.reset();
-    } else {
-        alert('Please fill in all fields with valid data.');
-    }
-}
+
+
+
+
+
+
+
 
 
 
@@ -131,8 +176,6 @@ function handleExpenseSubmission(e) {
 
 
 updateButtons();
-
-
 
 var dailyExpensesButton = document.getElementById("daily-expenses-button");
 var weeklyExpensesButton = document.getElementById("weekly-expenses-button");
@@ -158,8 +201,10 @@ function updateButtons() {
         showLeaderboardButton.className = "btn btn-primary";
         showLeaderboardButton.innerText = "Show Leaderboard";
         showLeaderboardButton.addEventListener("click", showLeaderboard);
-        showLeaderboardButton.addEventListener("click", function () {
+        showLeaderboardButton.addEventListener("click", function (e) {
+            e.preventDefault();
             removeExpensesButtons();
+            removeExpensesSumButton();
         });
         maindiv.insertBefore(showLeaderboardButton, expenseList);
 
@@ -168,7 +213,11 @@ function updateButtons() {
         showExpensesButton.id = "show-expenses-button";
         showExpensesButton.className = "btn btn-primary";
         showExpensesButton.innerText = "Show Expenses";
-        showExpensesButton.addEventListener("click", expenseFilter);
+        showExpensesButton.addEventListener("click", function (e) {
+            e.preventDefault();
+            removeExpensesSumButton();
+            expenseFilter();
+        });
         maindiv.insertBefore(showExpensesButton, expenseList);
 
 
@@ -177,7 +226,9 @@ function updateButtons() {
         downloadExpensesButton.className = "btn btn-primary";
         downloadExpensesButton.innerText = "Download Expenses";
         downloadExpensesButton.addEventListener("click", downloadFile);
-        downloadExpensesButton.addEventListener("click", function () {
+        downloadExpensesButton.addEventListener("click", function (e) {
+            e.preventDefault();
+            removeExpensesSumButton();
             removeExpensesButtons();
         });
         maindiv.insertBefore(downloadExpensesButton, expenseList);
@@ -198,12 +249,14 @@ function updateButtons() {
     itemsPerPageField.id = 'itemsPerPageField';
     itemsPerPageField.name = 'Expenses Per Page';
     // Add a blur event listener to read the value when the user clicks elsewhere
-    itemsPerPageField.addEventListener('blur', function () {
+    itemsPerPageField.addEventListener('blur', function (e) {
+        e.preventDefault();
         const inputValue = itemsPerPageField.value;
         console.log('Input value changed: ' + inputValue);
         localStorage.setItem('itemsPerPage', inputValue);
         itemsPerPage = inputValue;
         currentPage = 1;
+        removeExpensesSumButton();
         getExpenses();
 
         // You can use inputValue as needed here
@@ -240,11 +293,18 @@ function removeExpensesButtons() {
     }
 }
 
+
+
+
 var dailyExpensesButton = document.createElement("button");
 dailyExpensesButton.id = "daily-expenses-button";
 dailyExpensesButton.className = "btn btn-primary";
 dailyExpensesButton.innerText = "Daily Expenses";
-dailyExpensesButton.addEventListener("click", getDailyExpenses);
+dailyExpensesButton.addEventListener("click", ()=>{
+    currentPage = 1;
+    removeExpensesSumButton();
+    getDailyExpenses();
+});
 
 
 
@@ -252,7 +312,11 @@ var weeklyExpensesButton = document.createElement("button");
 weeklyExpensesButton.id = "weekly-expenses-button";
 weeklyExpensesButton.className = "btn btn-primary";
 weeklyExpensesButton.innerText = "Weekly Expenses";
-weeklyExpensesButton.addEventListener("click", getWeeklyExpenses);
+weeklyExpensesButton.addEventListener("click", ()=>{
+    currentPage = 1;
+    removeExpensesSumButton();
+    getWeeklyExpenses();
+});
 
 
 
@@ -260,16 +324,21 @@ var monthlyExpensesButton = document.createElement("button");
 monthlyExpensesButton.id = "monthly-expenses-button";
 monthlyExpensesButton.className = "btn btn-primary";
 monthlyExpensesButton.innerText = "Monthly Expenses";
-monthlyExpensesButton.addEventListener("click", getMonthlyExpenses);
+monthlyExpensesButton.addEventListener("click", ()=>{
+    currentPage = 1;
+    removeExpensesSumButton();
+    getMonthlyExpenses();
+});
+
+
 
 
 function expenseFilter() {
-    displayExpenses();
+    getExpenses();
 
     var expenseList = document.getElementById("expenseList");
     var maindiv = document.getElementById('maindiv');
     //Daily weekly and monthly buttons
-
     maindiv.insertBefore(dailyExpensesButton, expenseList);
     maindiv.insertBefore(weeklyExpensesButton, expenseList);
     maindiv.insertBefore(monthlyExpensesButton, expenseList);
@@ -279,10 +348,361 @@ function expenseFilter() {
 
 
 
+function removeExpensesSumButton() {
+    const totalExpenses = document.getElementById('total-expense-button');
+    if(totalExpenses && totalExpenses.parentNode){
+        totalExpenses.parentNode.removeChild(totalExpenses);
+    }
+}
 
 
 
-async function showLeaderboard() {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//get Daily Expenses
+
+function getExpenses() {
+    //fetching the stored token from local storage
+    let storedExpenses = axios.get(`http://localhost:8000/expense/get-expenses/${currentPage}/${itemsPerPage}`, { headers: { "Authorization": token } });
+
+    storedExpenses
+        .then((response) => {
+            console.log('logging response@@@@@@@');
+            console.log(response);
+        
+            expenses = [...response.data.expenses] || [];
+          
+            totalPages = Math.ceil((response.data.totalItemsAndSum[0].rowCount || 1) / itemsPerPage);
+            
+            totalExpenseSum = response.data.totalItemsAndSum[0].totalAmount;
+            if(totalExpenseSum === null){
+                totalExpenseSum = 0;
+            }
+
+            displayExpenses();
+        })
+        .catch((error) => console.log(error));
+}
+
+
+
+
+
+function displayExpenses() {
+    console.log('displaying expenses array : ');
+    console.log(expenses);
+
+    const expenseList = document.getElementById('expenseList');
+    var maindiv = document.getElementById('maindiv');
+    expenseList.innerHTML = '';
+
+    // Get the paginationButtons element
+    const paginationButtons = document.getElementById('paginationButtons');
+    paginationButtons.innerHTML = '';
+
+
+    //to display total expenses
+    const totalExpenses = document.createElement('button');
+    totalExpenses.id = 'total-expense-button';
+    totalExpenses.className = "btn btn-info";
+    totalExpenses.textContent = `TOTAL EXPENSE : ${totalExpenseSum} Rs. `;
+
+    maindiv.insertBefore(totalExpenses, paginationButtons);
+    
+
+
+
+    // Create buttons for Previous Page, Current Page, and Next Page
+    const prevPageButton = document.createElement('button');
+    prevPageButton.id = 'previous-page-button';
+    prevPageButton.className = "btn btn-primary";
+    prevPageButton.textContent = 'Previous Page';
+    prevPageButton.addEventListener("click", function (e) {
+        e.preventDefault();
+        removeExpensesSumButton();
+        previousPageLoad();
+    });
+    
+
+    const currentPageButton = document.createElement('button');
+    currentPageButton.id = 'current-page-button';
+    currentPageButton.className = "btn btn-primary";
+    currentPageButton.textContent = `Page ${currentPage}`;
+
+    const nextPageButton = document.createElement('button');
+    nextPageButton.id = 'next-page-button';
+    nextPageButton.className = "btn btn-primary";
+    nextPageButton.textContent = 'Next Page';
+    nextPageButton.addEventListener("click", function (e) {
+        e.preventDefault();
+        removeExpensesSumButton();
+        nextPageLoad();
+    });
+
+
+
+    paginationButtons.appendChild(prevPageButton);
+    paginationButtons.appendChild(currentPageButton);
+    paginationButtons.appendChild(nextPageButton);
+
+
+    if (currentPage === 1) {
+        const prevPageButton = document.getElementById("previous-page-button");
+        //prevPageButton.style.display = "none";  
+        //prevPageButton.style.backgroundColor = 'white';
+        prevPageButton.disabled = true;
+
+    }
+
+    if (currentPage === totalPages) {
+        const nextPageButton = document.getElementById("next-page-button");
+        //nextPageButton.style.display = "none";
+        nextPageButton.disabled = true;
+    }
+
+    expenses.forEach((expense, index) => {
+        const expenseElement = document.createElement('div');
+        expenseElement.className = 'alert alert-info';
+
+        expenseElement.innerHTML = `
+            <p><strong>Amount:</strong> ${expense.amount} Rs</p>
+            <p><strong>Description:</strong> ${expense.description}</p>
+            <p><strong>Category:</strong> ${expense.category}</p>
+        `;
+
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-danger delete-edit-buttons';
+        deleteButton.textContent = 'Delete Expense';
+        deleteButton.addEventListener('click', () => {
+            deleteExpenseFromServer(expense.id);
+            getExpenses();
+        });
+
+        expenseElement.appendChild(deleteButton);
+
+        expenseList.appendChild(expenseElement);
+    });
+}
+
+
+
+function nextPageLoad() {
+    if (currentPage < totalPages) {
+        currentPage++;
+        getExpenses(); // Refresh the display with the new page
+    }
+}
+
+function previousPageLoad() {
+    if (currentPage > 1) {
+        currentPage--;
+        getExpenses(); // Refresh the display with the new page
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//get Daily Expenses
+
+function getDailyExpenses() {
+    //currentPage = 1;
+    //fetching the stored token from local storage
+    let storedExpenses = axios.get(`http://localhost:8000/expense/get-daily-expenses/${currentPage}/${itemsPerPage}`, { headers: { "Authorization": token } });
+
+
+    storedExpenses
+        .then((response) => {
+            console.log(response);
+            dailyExpenses = [...response.data.expenses] || [];
+            totalPages = Math.ceil((response.data.totalItemsAndSum[0].rowCount || 1) / itemsPerPage);
+            totalExpenseSum = response.data.totalItemsAndSum[0].totalAmount;
+            if(totalExpenseSum === null){
+                totalExpenseSum = 0;
+            }
+            console.log('$%$%$%$%$%$%$%$%');
+            console.log(totalExpenseSum);
+
+
+            // Display existing expenses on page load
+            displayDailyExpenses();
+        })
+        .catch((error) => console.log(error));
+
+
+
+}
+
+
+function displayDailyExpenses() {
+
+    console.log('displaying expenses array : ');
+    console.log(expenses);
+
+    const expenseList = document.getElementById('expenseList');
+    var maindiv = document.getElementById('maindiv');
+    expenseList.innerHTML = '';
+
+    // Get the paginationButtons element
+    const paginationButtons = document.getElementById('paginationButtons');
+    paginationButtons.innerHTML = '';
+
+
+    //to display total expenses
+    const totalExpenses = document.createElement('button');
+    totalExpenses.id = 'total-expense-button';
+    totalExpenses.className = "btn btn-info";
+    totalExpenses.textContent = `TOTAL EXPENSE : ${totalExpenseSum} Rs. `;
+
+    maindiv.insertBefore(totalExpenses, paginationButtons);
+
+    // Create buttons for Previous Page, Current Page, and Next Page
+    const prevPageButton = document.createElement('button');
+    prevPageButton.id = 'previous-page-button';
+    prevPageButton.className = "btn btn-primary";
+    prevPageButton.textContent = 'Previous Page';
+    prevPageButton.addEventListener("click", function (e) {
+        e.preventDefault();
+        removeExpensesSumButton();
+        previousPageLoadDaily();
+    });
+
+    const currentPageButton = document.createElement('button');
+    currentPageButton.id = 'current-page-button';
+    currentPageButton.className = "btn btn-primary";
+    currentPageButton.textContent = `Page ${currentPage}`;
+
+    const nextPageButton = document.createElement('button');
+    nextPageButton.id = 'next-page-button';
+    nextPageButton.className = "btn btn-primary";
+    nextPageButton.textContent = 'Next Page';
+    nextPageButton.addEventListener("click", function (e) {
+        e.preventDefault();
+        removeExpensesSumButton();
+        nextPageLoadDaily();
+    });
+
+
+
+    paginationButtons.appendChild(prevPageButton);
+    paginationButtons.appendChild(currentPageButton);
+    paginationButtons.appendChild(nextPageButton);
+
+
+    if (currentPage === 1) {
+        const prevPageButton = document.getElementById("previous-page-button");
+        //prevPageButton.style.display = "none";  
+        //prevPageButton.style.backgroundColor = 'white';
+        prevPageButton.disabled = true;
+
+    }
+
+    if (currentPage === totalPages) {
+        const nextPageButton = document.getElementById("next-page-button");
+        //nextPageButton.style.display = "none";
+        nextPageButton.disabled = true;
+    }
+
+    dailyExpenses.forEach((expense, index) => {
+        const expenseElement = document.createElement('div');
+        expenseElement.className = 'alert alert-info';
+
+        expenseElement.innerHTML = `
+            <p><strong>Amount:</strong> ${expense.amount} Rs</p>
+            <p><strong>Description:</strong> ${expense.description}</p>
+            <p><strong>Category:</strong> ${expense.category}</p>
+        `;
+
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-danger delete-edit-buttons';
+        deleteButton.textContent = 'Delete Expense';
+        deleteButton.addEventListener('click', () => {
+            deleteExpenseFromServer(expense.id);
+            //getDailyExpenses();
+        });
+
+        expenseElement.appendChild(deleteButton);
+
+        expenseList.appendChild(expenseElement);
+
+    });
+}
+
+
+function nextPageLoadDaily() {
+    if (currentPage < totalPages) {
+        currentPage++;
+        getDailyExpenses(); // Refresh the display with the new page
+    }
+}
+
+function previousPageLoadDaily() {
+    if (currentPage > 1) {
+        currentPage--;
+        getDailyExpenses(); // Refresh the display with the new page
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//leaderboard functionality:
+
+function showLeaderboard() {
     axios.get("http://localhost:8000/premium/show-leaderboard", { headers: { "Authorization": token } })
 
 
@@ -297,6 +717,9 @@ async function showLeaderboard() {
 
 
 function displayLeaderboard() {
+    const paginationButtons = document.getElementById('paginationButtons');
+    paginationButtons.innerHTML = '';
+
     console.log('displaying expenses array : ');
     console.log(expenses);
 
@@ -326,320 +749,21 @@ function displayLeaderboard() {
 
 
 
-function getExpenses() {
-    //fetching the stored token from local storage
-    let storedExpenses = axios.get(`http://localhost:8000/expense/get-expenses/${currentPage}/${itemsPerPage}`, { headers: { "Authorization": token } });
 
-    storedExpenses
-        .then((response) => {
-            console.log(response);
-            console.log('logging response@@@@@@@');
 
-            console.log(response.data.totalItems);
-            console.log('logging total items');
 
 
 
-            expenses = [...response.data.expenses] || [];
-            totalPages = Math.ceil(response.data.totalItems / itemsPerPage);
 
 
-            // Display existing expenses on page load
-            displayExpenses();
-        })
-        .catch((error) => console.log(error));
-}
 
-function pagination() {
-    // Get the paginationButtons element
-    const paginationButtons = document.getElementById('paginationButtons');
-    paginationButtons.innerHTML = '';
 
-    // Create buttons for Previous Page, Current Page, and Next Page
-    const prevPageButton = document.createElement('button');
-    prevPageButton.id = 'previous-page-button';
-    prevPageButton.className = "btn btn-primary";
-    prevPageButton.textContent = 'Previous Page';
-    prevPageButton.addEventListener('click', previousPageLoad);
 
-    const currentPageButton = document.createElement('button');
-    currentPageButton.id = 'current-page-button';
-    currentPageButton.className = "btn btn-primary";
-    currentPageButton.textContent = `Page ${currentPage}`;
 
-    const nextPageButton = document.createElement('button');
-    nextPageButton.id = 'next-page-button';
-    nextPageButton.className = "btn btn-primary";
-    nextPageButton.textContent = 'Next Page';
-    nextPageButton.addEventListener('click', nextPageLoad);
 
 
 
-    paginationButtons.appendChild(prevPageButton);
-    paginationButtons.appendChild(currentPageButton);
-    paginationButtons.appendChild(nextPageButton);
 
-
-    if (currentPage === 1) {
-        const prevPageButton = document.getElementById("previous-page-button");
-        //prevPageButton.style.display = "none";  
-        //prevPageButton.style.backgroundColor = 'white';
-        prevPageButton.disabled = true;
-
-    }
-
-    if (currentPage === totalPages) {
-        const nextPageButton = document.getElementById("next-page-button");
-        //nextPageButton.style.display = "none";
-        nextPageButton.disabled = true;
-    }
-}
-
-function displayExpenses() {
-    console.log('displaying expenses array : ');
-    console.log(expenses);
-
-    const expenseList = document.getElementById('expenseList');
-    var maindiv = document.getElementById('maindiv');
-    expenseList.innerHTML = '';
-
-
-    pagination();
-
-    expenses.forEach((expense, index) => {
-        const expenseElement = document.createElement('div');
-        expenseElement.className = 'alert alert-info';
-
-        expenseElement.innerHTML = `
-            <p><strong>Amount:</strong> ${expense.amount} Rs</p>
-            <p><strong>Description:</strong> ${expense.description}</p>
-            <p><strong>Category:</strong> ${expense.category}</p>
-        `;
-
-        const deleteButton = document.createElement('button');
-        deleteButton.className = 'btn btn-danger delete-edit-buttons';
-        deleteButton.textContent = 'Delete Expense';
-        deleteButton.addEventListener('click', () => {
-            deleteExpenseFromServer(expense.id);
-            getExpenses();
-        });
-
-        expenseElement.appendChild(deleteButton);
-
-        expenseList.appendChild(expenseElement);
-    });
-}
-
-
-
-function nextPageLoad() {
-    console.log('In next page load');
-    console.log('current page no');
-
-    console.log(currentPage);
-    console.log('total pages');
-    console.log(totalPages);
-
-    if (currentPage < totalPages) {
-        currentPage++;
-        getExpenses(); // Refresh the display with the new page
-    }
-}
-
-function previousPageLoad() {
-    console.log('In previous page load');
-    console.log('current page no');
-
-    console.log(currentPage);
-    console.log('total pages');
-    console.log(totalPages);
-
-    if (currentPage > 1) {
-        currentPage--;
-        getExpenses(); // Refresh the display with the new page
-    }
-}
-
-
-function getDailyExpenses() {
-    currentPage = 1;
-    //fetching the stored token from local storage
-    let storedExpenses = axios.get(`http://localhost:8000/expense/get-expenses/${currentPage}/${itemsPerPage}`, { headers: { "Authorization": token } });
-
-
-    storedExpenses
-        .then((response) => {
-            console.log(response);
-            dailyExpenses = [...response.data.expenses] || [];
-
-
-            // Display existing expenses on page load
-            displayDailyExpenses();
-        })
-        .catch((error) => console.log(error));
-
-
-
-}
-
-
-
-
-function displayDailyExpenses() {
-
-    console.log('displaying expenses array : ');
-    console.log(expenses);
-
-    const expenseList = document.getElementById('expenseList');
-    var maindiv = document.getElementById('maindiv');
-    expenseList.innerHTML = '';
-
-
-    pagination();
-
-    dailyExpenses.forEach((expense, index) => {
-        const expenseElement = document.createElement('div');
-        expenseElement.className = 'alert alert-info';
-
-        expenseElement.innerHTML = `
-            <p><strong>Amount:</strong> ${expense.amount} Rs</p>
-            <p><strong>Description:</strong> ${expense.description}</p>
-            <p><strong>Category:</strong> ${expense.category}</p>
-        `;
-
-        const deleteButton = document.createElement('button');
-        deleteButton.className = 'btn btn-danger delete-edit-buttons';
-        deleteButton.textContent = 'Delete Expense';
-        deleteButton.addEventListener('click', () => {
-            deleteExpenseFromServer(expense.id);
-            //getDailyExpenses();
-        });
-
-        expenseElement.appendChild(deleteButton);
-
-        expenseList.appendChild(expenseElement);
-
-    });
-}
-
-
-
-
-
-function getWeeklyExpenses() {
-    currentPage = 1;
-    //fetching the stored token from local storage
-    let storedExpenses = axios.get(`http://localhost:8000/expense/get-expenses/${currentPage}/${itemsPerPage}`, { headers: { "Authorization": token } });
-
-    storedExpenses
-        .then((response) => {
-            console.log(response);
-            weeklyExpenses = [...response.data.expenses] || [];
-
-
-            // Display existing expenses on page load
-            displayWeeklyExpenses();
-        })
-        .catch((error) => console.log(error));
-
-}
-
-
-function displayWeeklyExpenses() {
-
-    
-    console.log('displaying expenses array : ');
-    console.log(expenses);
-
-    const expenseList = document.getElementById('expenseList');
-    var maindiv = document.getElementById('maindiv');
-    expenseList.innerHTML = '';
-
-
-    pagination();
-
-    weeklyExpenses.forEach((expense, index) => {
-        const expenseElement = document.createElement('div');
-        expenseElement.className = 'alert alert-info';
-
-        expenseElement.innerHTML = `
-            <p><strong>Amount:</strong> ${expense.amount} Rs</p>
-            <p><strong>Description:</strong> ${expense.description}</p>
-            <p><strong>Category:</strong> ${expense.category}</p>
-        `;
-
-        const deleteButton = document.createElement('button');
-        deleteButton.className = 'btn btn-danger delete-edit-buttons';
-        deleteButton.textContent = 'Delete Expense';
-        deleteButton.addEventListener('click', () => {
-            deleteExpenseFromServer(expense.id);
-            //getWeeklyExpenses();
-        });
-
-        expenseElement.appendChild(deleteButton);
-
-        expenseList.appendChild(expenseElement);
-    });
-}
-
-
-
-
-function getMonthlyExpenses() {
-    currentPage = 1;
-    //fetching the stored token from local storage
-
-    let storedExpenses = axios.get(`http://localhost:8000/expense/get-expenses/${currentPage}/${itemsPerPage}`, { headers: { "Authorization": token } });
-
-    storedExpenses
-        .then((response) => {
-            console.log(response);
-            monthlyExpenses = [...response.data.expenses] || [];
-
-
-            // Display existing expenses on page load
-            displayMonthlyExpenses();
-        })
-        .catch((error) => console.log(error));
-}
-
-function displayMonthlyExpenses() {
-
-  
-    console.log('displaying expenses array : ');
-    console.log(expenses);
-
-    const expenseList = document.getElementById('expenseList');
-    var maindiv = document.getElementById('maindiv');
-    expenseList.innerHTML = '';
-
-
-    pagination();
-
-    monthlyExpenses.forEach((expense, index) => {
-        const expenseElement = document.createElement('div');
-        expenseElement.className = 'alert alert-info';
-
-        expenseElement.innerHTML = `
-            <p><strong>Amount:</strong> ${expense.amount} Rs</p>
-            <p><strong>Description:</strong> ${expense.description}</p>
-            <p><strong>Category:</strong> ${expense.category}</p>
-        `;
-
-        const deleteButton = document.createElement('button');
-        deleteButton.className = 'btn btn-danger delete-edit-buttons';
-        deleteButton.textContent = 'Delete Expense';
-        deleteButton.addEventListener('click', () => {
-            deleteExpenseFromServer(expense.id);
-            //getMonthlyExpenses();
-        });
-
-        expenseElement.appendChild(deleteButton);
-
-        expenseList.appendChild(expenseElement);
-
-    });
-}
 
 
 
@@ -659,10 +783,10 @@ function displayMonthlyExpenses() {
 
 function downloadFile() {
     console.log('%%%%%%%%%%%%%%%');
-    axios.get(`http://localhost:8000/user/download`, { headers: { "Authorization": token } })
+    axios.get(`http://localhost:8000/expense/download`, { headers: { "Authorization": token } })
         .then((response) => {
             console.log(response);
-            if (response.status === 200) {
+            if (response.status === 201) {
                 getDownloadableExpenseFiles();
             } else {
                 throw new Error(response.data.message)
@@ -680,7 +804,7 @@ function getDownloadableExpenseFiles() {
     //fetching the stored token from local storage
     console.log('printing token in getDownloadableExpenseFiles function');
     console.log(token);
-    let storedExpenseFiles = axios.get("http://localhost:8000/expense/get-downloadable-expense-files", { headers: { "Authorization": token } });
+    let storedExpenseFiles = axios.get("http://localhost:8000/file/get-downloadable-expense-files", { headers: { "Authorization": token } });
 
     console.log(storedExpenseFiles);
     storedExpenseFiles
@@ -698,6 +822,11 @@ function getDownloadableExpenseFiles() {
 
 
 function displayDownloadableExpenseFiles() {
+
+    const paginationButtons = document.getElementById('paginationButtons');
+    paginationButtons.innerHTML = '';
+
+
     console.log('displaying dowanloadable files array : ');
     console.log(downloadableExpenseFiles);
 
@@ -714,17 +843,30 @@ function displayDownloadableExpenseFiles() {
         `;
 
         const downloadButton = document.createElement('button');
-        downloadButton.className = 'btn btn-success download-button';
+        downloadButton.id = 'download-file-button';
+        downloadButton.className = 'btn btn-success';
         downloadButton.textContent = 'Download Expense Details';
-        downloadButton.addEventListener("click", function () {
+        downloadButton.addEventListener("click", function (e) {
+            e.preventDefault();
             download(file.fileURL, `Expense/${new Date()}`);
         });
 
+        const deleteFileButton = document.createElement('button');
+        deleteFileButton.id = 'delete-file-button';
+        deleteFileButton.className = 'btn btn-danger';
+        deleteFileButton.textContent = 'Delete File';
+        deleteFileButton.addEventListener("click", function (e) {
+            e.preventDefault();
+            deleteExpenseFile(file.id);
+        });
+
         fileElement.appendChild(downloadButton);
+        fileElement.appendChild(deleteFileButton);
 
         expenseList.appendChild(fileElement);
     });
 }
+
 
 
 
@@ -755,3 +897,332 @@ function download(fileURL, filename) {
 }
 
 
+function deleteExpenseFile(fileID) {
+    axios.delete(`http://localhost:8000/file/delete-file/${fileID}`, { headers: { "Authorization": token } })
+        .then((response) => {
+            console.log(response);
+            //location.reload();
+            getDownloadableExpenseFiles();
+
+        })
+        .catch((error) => console.log(error));
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//Weekly and monthly feature:
+
+
+function getWeeklyExpenses() {
+    //currentPage = 1;
+    //fetching the stored token from local storage
+    let storedExpenses = axios.get(`http://localhost:8000/expense/get-weekly-expenses/${currentPage}/${itemsPerPage}`, { headers: { "Authorization": token } });
+
+    storedExpenses
+        .then((response) => {
+            console.log(response);
+            weeklyExpenses = [...response.data.expenses] || [];
+            totalPages = Math.ceil((response.data.totalItemsAndSum[0].rowCount || 1) / itemsPerPage);
+            totalExpenseSum = response.data.totalItemsAndSum[0].totalAmount;
+            if(totalExpenseSum === null){
+                totalExpenseSum = 0;
+            }
+            // Display existing expenses on page load
+            displayWeeklyExpenses();
+        })
+        .catch((error) => console.log(error));
+
+}
+
+
+function displayWeeklyExpenses() {
+
+    
+    console.log('displaying expenses array : ');
+    console.log(expenses);
+
+    const expenseList = document.getElementById('expenseList');
+    var maindiv = document.getElementById('maindiv');
+    expenseList.innerHTML = '';
+
+
+    // Get the paginationButtons element
+    const paginationButtons = document.getElementById('paginationButtons');
+    paginationButtons.innerHTML = '';
+
+
+    //to display total expenses
+    const totalExpenses = document.createElement('button');
+    totalExpenses.id = 'total-expense-button';
+    totalExpenses.className = "btn btn-info";
+    totalExpenses.textContent = `TOTAL EXPENSE : ${totalExpenseSum} Rs. `;
+
+    maindiv.insertBefore(totalExpenses, paginationButtons);
+
+    // Create buttons for Previous Page, Current Page, and Next Page
+    const prevPageButton = document.createElement('button');
+    prevPageButton.id = 'previous-page-button';
+    prevPageButton.className = "btn btn-primary";
+    prevPageButton.textContent = 'Previous Page';
+    prevPageButton.addEventListener("click", function (e) {
+        e.preventDefault();
+        removeExpensesSumButton();
+        previousPageLoadWeekly();
+    });
+    
+
+    const currentPageButton = document.createElement('button');
+    currentPageButton.id = 'current-page-button';
+    currentPageButton.className = "btn btn-primary";
+    currentPageButton.textContent = `Page ${currentPage}`;
+
+    const nextPageButton = document.createElement('button');
+    nextPageButton.id = 'next-page-button';
+    nextPageButton.className = "btn btn-primary";
+    nextPageButton.textContent = 'Next Page';
+    nextPageButton.addEventListener("click", function (e) {
+        e.preventDefault();
+        removeExpensesSumButton();
+        nextPageLoadWeekly();
+    });
+
+
+
+    paginationButtons.appendChild(prevPageButton);
+    paginationButtons.appendChild(currentPageButton);
+    paginationButtons.appendChild(nextPageButton);
+
+
+    if (currentPage === 1) {
+        const prevPageButton = document.getElementById("previous-page-button");
+        //prevPageButton.style.display = "none";  
+        //prevPageButton.style.backgroundColor = 'white';
+        prevPageButton.disabled = true;
+
+    }
+
+    if (currentPage === totalPages) {
+        const nextPageButton = document.getElementById("next-page-button");
+        //nextPageButton.style.display = "none";
+        nextPageButton.disabled = true;
+    }
+
+    weeklyExpenses.forEach((expense, index) => {
+        const expenseElement = document.createElement('div');
+        expenseElement.className = 'alert alert-info';
+
+        expenseElement.innerHTML = `
+            <p><strong>Amount:</strong> ${expense.amount} Rs</p>
+            <p><strong>Description:</strong> ${expense.description}</p>
+            <p><strong>Category:</strong> ${expense.category}</p>
+        `;
+
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-danger delete-edit-buttons';
+        deleteButton.textContent = 'Delete Expense';
+        deleteButton.addEventListener('click', () => {
+            deleteExpenseFromServer(expense.id);
+            //getWeeklyExpenses();
+        });
+
+        expenseElement.appendChild(deleteButton);
+
+        expenseList.appendChild(expenseElement);
+    });
+}
+
+
+function nextPageLoadWeekly() {
+    if (currentPage < totalPages) {
+        currentPage++;
+        getWeeklyExpenses(); // Refresh the display with the new page
+    }
+}
+
+function previousPageLoadWeekly() {
+    if (currentPage > 1) {
+        currentPage--;
+        getWeeklyExpenses(); // Refresh the display with the new page
+    }
+}
+
+
+
+
+function getMonthlyExpenses() {
+    //currentPage = 1;
+    //fetching the stored token from local storage
+
+    let storedExpenses = axios.get(`http://localhost:8000/expense/get-monthly-expenses/${currentPage}/${itemsPerPage}`, { headers: { "Authorization": token } });
+
+    storedExpenses
+        .then((response) => {
+            console.log(response);
+            monthlyExpenses = [...response.data.expenses] || [];
+            totalPages = Math.ceil((response.data.totalItemsAndSum[0].rowCount || 1) / itemsPerPage);
+            totalExpenseSum = response.data.totalItemsAndSum[0].totalAmount;
+            if(totalExpenseSum === null){
+                totalExpenseSum = 0;
+            }
+
+
+            // Display existing expenses on page load
+            displayMonthlyExpenses();
+        })
+        .catch((error) => console.log(error));
+}
+
+function displayMonthlyExpenses() {
+
+  
+    console.log('displaying expenses array : ');
+    console.log(expenses);
+
+    const expenseList = document.getElementById('expenseList');
+    var maindiv = document.getElementById('maindiv');
+    expenseList.innerHTML = '';
+
+
+    // Get the paginationButtons element
+    const paginationButtons = document.getElementById('paginationButtons');
+    paginationButtons.innerHTML = '';
+
+    //to display total expenses
+    const totalExpenses = document.createElement('button');
+    totalExpenses.id = 'total-expense-button';
+    totalExpenses.className = "btn btn-info";
+    totalExpenses.textContent = `TOTAL EXPENSE : ${totalExpenseSum} Rs. `;
+
+    maindiv.insertBefore(totalExpenses, paginationButtons);
+
+    // Create buttons for Previous Page, Current Page, and Next Page
+    const prevPageButton = document.createElement('button');
+    prevPageButton.id = 'previous-page-button';
+    prevPageButton.className = "btn btn-primary";
+    prevPageButton.textContent = 'Previous Page';
+    prevPageButton.addEventListener("click", function (e) {
+        e.preventDefault();
+        removeExpensesSumButton();
+        previousPageLoadMonthly();
+    });
+
+    const currentPageButton = document.createElement('button');
+    currentPageButton.id = 'current-page-button';
+    currentPageButton.className = "btn btn-primary";
+    currentPageButton.textContent = `Page ${currentPage}`;
+
+    const nextPageButton = document.createElement('button');
+    nextPageButton.id = 'next-page-button';
+    nextPageButton.className = "btn btn-primary";
+    nextPageButton.textContent = 'Next Page';
+    nextPageButton.addEventListener("click", function (e) {
+        e.preventDefault();
+        removeExpensesSumButton();
+        nextPageLoadMonthly();
+    });
+
+
+
+    paginationButtons.appendChild(prevPageButton);
+    paginationButtons.appendChild(currentPageButton);
+    paginationButtons.appendChild(nextPageButton);
+
+
+    if (currentPage === 1) {
+        const prevPageButton = document.getElementById("previous-page-button");
+        //prevPageButton.style.display = "none";  
+        //prevPageButton.style.backgroundColor = 'white';
+        prevPageButton.disabled = true;
+
+    }
+
+    if (currentPage === totalPages) {
+        const nextPageButton = document.getElementById("next-page-button");
+        //nextPageButton.style.display = "none";
+        nextPageButton.disabled = true;
+    }
+
+    monthlyExpenses.forEach((expense, index) => {
+        const expenseElement = document.createElement('div');
+        expenseElement.className = 'alert alert-info';
+
+        expenseElement.innerHTML = `
+            <p><strong>Amount:</strong> ${expense.amount} Rs</p>
+            <p><strong>Description:</strong> ${expense.description}</p>
+            <p><strong>Category:</strong> ${expense.category}</p>
+        `;
+
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-danger delete-edit-buttons';
+        deleteButton.textContent = 'Delete Expense';
+        deleteButton.addEventListener('click', () => {
+            deleteExpenseFromServer(expense.id);
+            //getMonthlyExpenses();
+        });
+
+        expenseElement.appendChild(deleteButton);
+
+        expenseList.appendChild(expenseElement);
+
+    });
+}
+
+
+
+function nextPageLoadMonthly() {
+    
+    if (currentPage < totalPages) {
+        currentPage++;
+        getMonthlyExpenses(); // Refresh the display with the new page
+    }
+}
+
+function previousPageLoadMonthly() {
+    
+    if (currentPage > 1) {
+        currentPage--;
+        getMonthlyExpenses(); // Refresh the display with the new page
+    }
+}

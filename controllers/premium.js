@@ -1,12 +1,89 @@
 const Expense = require('../models/expense');
 const User = require('../models/user');
 const sequelize = require('../util/database');
+const errorHandlingMiddleware = require('../middleware/errorHandling');
 
 
 
 
 exports.getLeaderboardData = (async (req, res, next) => {
-    //way 2 : optimized
+  
+    //way 5:
+    try {
+        const leaderboardUsers = await User.findAll({
+
+            attributes: ['id', 'name', 'totalExpense'],
+            order: [[sequelize.col('totalExpense'), 'DESC']] //take only necessary fields from table
+        });
+
+        return res.status(200).json({ leaderboardData: leaderboardUsers, success: true });
+
+    } catch (error) {
+        console.log(error);
+        next(error);
+        return res.status(500).json(error);
+    }
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //way 2 : optimized
     // try {
     //     const users = await User.findAll({
 
@@ -61,49 +138,38 @@ exports.getLeaderboardData = (async (req, res, next) => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-    
     //way 1 : brute force
-    try {
-        const users = await User.findAll();
-        const expenses = await Expense.findAll();
-        const userAggregatedExpenses = {};
-        console.log(expenses);
+    // try {
+    //     const users = await User.findAll();
+    //     const expenses = await Expense.findAll();
+    //     const userAggregatedExpenses = {};
+    //     console.log(expenses);
 
-        expenses.forEach((expense)=> {
-            if(userAggregatedExpenses[expense.userId]){
-                userAggregatedExpenses[expense.userId] = userAggregatedExpenses[expense.userId] + expense.amount;
-            }
-            else{
-                userAggregatedExpenses[expense.userId] = expense.amount;
-            }
+    //     expenses.forEach((expense)=> {
+    //         if(userAggregatedExpenses[expense.userId]){
+    //             userAggregatedExpenses[expense.userId] = userAggregatedExpenses[expense.userId] + expense.amount;
+    //         }
+    //         else{
+    //             userAggregatedExpenses[expense.userId] = expense.amount;
+    //         }
 
-        })
+    //     })
 
-        var leaderboardData = [];
+    //     var leaderboardData = [];
 
-        users.forEach((user)=>{
-            leaderboardData.push({name: user.name, totalExpense: userAggregatedExpenses[user.id] || 0});
-        })
+    //     users.forEach((user)=>{
+    //         leaderboardData.push({name: user.name, totalExpense: userAggregatedExpenses[user.id] || 0});
+    //     })
 
-        console.log(leaderboardData);
-        leaderboardData.sort((user1, user2)=> user2.totalExpense - user1.totalExpense);
-        console.log(`sorted leaderboard data ${leaderboardData}`);
-        return res.status(200).json({leaderboardData: leaderboardData, success: true});
+    //     console.log(leaderboardData);
+    //     leaderboardData.sort((user1, user2)=> user2.totalExpense - user1.totalExpense);
+    //     console.log(`sorted leaderboard data ${leaderboardData}`);
+    //     return res.status(200).json({leaderboardData: leaderboardData, success: true});
 
-    } catch (error) {
-        console.log(error);
-        res.status(500).json(error);
-    }
+    // } catch (error) {
+    //     console.log(error);
+    //     res.status(500).json(error);
+    // }
 
 
 
@@ -137,26 +203,3 @@ exports.getLeaderboardData = (async (req, res, next) => {
     // const result = await sequelize.query('SELECT sum(e.amount) as totalExpense, u.id, u.name from users as u INNER JOIN expenses as e ON u.id = e.userId GROUP BY e.userId ORDER BY sum(e.amount) DESC');
     // console.log(result);
     // return res.json({leaderboardData: result[0], success: true});
-
-
-
-    //way 5:
-    // try {
-    //     const leaderboardUsers = await User.findAll({
-
-    //         attributes: ['id', 'name', 'totalExpense'],
-    //         order: [[sequelize.col('totalExpense'), 'DESC']] //take only necessary fields from table
-    //     });
-
-    //     return res.status(200).json({ leaderboardData: leaderboardUsers, success: true });
-
-    // } catch (error) {
-    //     console.log(error);
-    //     res.status(500).json(error);
-    // }
-})
-
-
-
-
-

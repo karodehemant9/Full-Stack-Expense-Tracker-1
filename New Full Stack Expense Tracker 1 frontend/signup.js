@@ -25,6 +25,11 @@ function formSubmitHandler(e) {
         console.log(email);
         console.log(password);
         signupUser(name, email, password);
+
+        const destinationURL = "login.html";
+        // Redirect to the destination page
+        window.location.href = destinationURL;
+        //redirecting to login page
         // Reset the form
         e.target.reset();
     }

@@ -8,6 +8,7 @@
 
     justify-content: center;
     align-items: center;
+    
 
 
 }
@@ -45,6 +46,8 @@ h2 {
     border: none;
     width: 100%;
 }
+
+
 
 #add-expense-button:hover,
 #buy-premium-button:hover {
@@ -248,8 +251,9 @@ h2 {
     margin-top: 11px;
     max-width: 150px;
     border: 4px solid #17a2b8;
-    border-radius: 3px; 
+    border-radius: 3px;
 }
+
 
 
 #itemsPerPageFieldContainer {
@@ -257,4 +261,44 @@ h2 {
     display: flex;
     flex-direction: row;
     align-items: center;
+}
+
+
+
+#total-expense-button {
+    margin-top: 10px;
+    border: none;
+    width: 100%;
+}
+
+#total-expense-button:hover {
+    background-color: #17a2b8;
+}
+
+
+html {
+    /* scroll-behavior: smooth; */
+    scroll-behavior: auto;
+}
+
+
+
+#emptydiv {
+    width: 100%;
+    /* Set the desired width */
+    height: 30px;
+    /* Set the desired height */
+    margin-top: 20px;
+    /* Set the desired margin or spacing */
+    background-color: none;
+    /* For demonstration purposes */
+}
+
+
+
+
+
+#download-file-button,
+#delete-file-button {
+    width: 50%
 }

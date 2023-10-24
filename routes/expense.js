@@ -5,14 +5,15 @@ const router = express.Router();
 
 
 router.post('/add-expense', authenticateUser, expenseController.addExpense);
-
-router.get('/get-expenses/:pageNo/:itemsPerPage', authenticateUser, expenseController.getExpenses);
-
 router.delete('/delete-expense/:expenseID', authenticateUser, expenseController.deleteExpense);
-
 router.get('/download', authenticateUser, expenseController.downloadExpenses);
 
-router.get('/get-downloadable-expense-files', authenticateUser, expenseController.getDownloadableExpenseFiles);
+
+
+router.get('/get-expenses/:pageNo/:itemsPerPage', authenticateUser, expenseController.getExpenses);
+router.get('/get-daily-expenses/:pageNo/:itemsPerPage', authenticateUser, expenseController.getDailyExpenses);
+router.get('/get-weekly-expenses/:pageNo/:itemsPerPage', authenticateUser, expenseController.getWeeklyExpenses);
+router.get('/get-monthly-expenses/:pageNo/:itemsPerPage', authenticateUser, expenseController.getMonthlyExpenses);
 
 
 
